@@ -6,20 +6,19 @@ Copy these into Play Console under **Grow > Store presence > Main store listing*
 Tiny Trader
 
 **Short description** (80 characters max)
-Day trade with pretend money. Live candlestick charts, silly news, quick trades.
+The simplest day-trading game. Watch the live chart, tap BUY, tap SELL.
 
 **Full description**
-Tiny Trader is a super simple day-trading game played with pretend money.
+Tiny Trader is the simplest day-trading game there is, played with pretend money.
 
-You start with $10,000 and a 5-day week. Each trading day runs live from 9:30 AM to 4:00 PM in about two minutes. Candlestick bars grow and shrink in real time while you watch. Tap BUY when you think a stock will rise and SELL when it's up to lock in a profit.
+Watch the live price bars move. Tap BUY when you think the price will go up. Tap SELL to cash out. Sell higher than you bought and you make money!
 
-• Live candlestick charts with volume bars, just like real trading apps
-• Six made-up companies, from calm Sloth Mattress to wild Moon Mining
-• Breaking news pops up any second and moves prices fast
-• One-tap trading: pick 1, 10, 100, or Max shares, then BUY or SELL
-• See exactly what you paid and your profit or loss as it changes
-• End each day with your results, and finish the week against the market average
-• Pause any time. Plays fully offline. No ads, no accounts, no real money, no data collected.
+• One big button: BUY puts all your money in, SELL cashes it all out
+• Live candlestick chart that moves while you watch
+• Three made-up companies: calm Sloth Mattress, Pizza Rocket, and wild Moon Mining
+• Funny news headlines that make prices jump or crash
+• Each trading day takes about two minutes, then you see what you made
+• Pause any time. Plays offline. No ads, no accounts, no real money, no data collected.
 
 Tiny Trader is just a game. The companies, news, and prices are all made up, and nothing in it is investing advice.
 
@@ -33,7 +32,7 @@ Tiny Trader is just a game. The companies, news, and prices are all made up, and
 |---|---|---|
 | App icon | icon-512.png | 512 x 512 PNG |
 | Feature graphic | feature-graphic-1024x500.png | 1024 x 500 |
-| Phone screenshots | screenshots/1-welcome.png to 4-market-closed.png | 2 to 8 images, 1080 x 1920 |
+| Phone screenshots | screenshots/1-welcome.png to 4-day-done.png | 2 to 8 images, 1080 x 1920 |
 
 ## Answers for the Play Console forms
 
