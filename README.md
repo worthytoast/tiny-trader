@@ -1,6 +1,6 @@
 # Tiny Trader
 
-The simplest day-trading game: a live candlestick chart, three made-up companies, and one big button. BUY puts all your pretend money in, SELL cashes it all out. Each trading day takes about 2 minutes, and you're cashed out automatically at 4:00 PM.
+The simplest day-trading game: a live candlestick chart, three made-up companies, and one big button. BUY puts all your pretend money in, SELL cashes it all out. Each trading day takes about 6½ minutes, and you're cashed out automatically at 4:00 PM.
 
 - **Play in a browser:** https://worthytoast.github.io/tiny-trader/
 - **Android app:** `android/` builds a signed Play Store bundle (`.aab`) that runs the same game offline.

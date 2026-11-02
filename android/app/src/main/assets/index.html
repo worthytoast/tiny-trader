@@ -104,7 +104,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 <div class="scrim" id="intro" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="introT">
     <h2 id="introT">Tiny Trader</h2>
-    <p>You have <b>$10,000 of pretend money</b>.</p>
+    <p>You have <b>$10,000 of pretend money</b>. Each trading day lasts about 6 minutes.</p>
     <ol class="steps">
       <li>Watch the price bars move.</li>
       <li>Tap <b class="up">BUY</b> when you think it will go up.</li>
@@ -134,7 +134,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
-const START=10000, MINS=390, CANDLE=5, TICK_MS=300, KEEP=110, KEY="tinytrader.v3";
+const START=10000, MINS=390, CANDLE=5, TICK_MS=1000, KEEP=110, KEY="tinytrader.v3";
 
 const STOCKS=[
  {t:"SLTH",n:"Sloth Mattress",p:65,vol:.016,beta:.5,risk:"calm",
@@ -302,14 +302,14 @@ function draw(snap){
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
   const o=s.st[s.sel], p=o.p, live=s.phase==="open";
-  if(snap||disp===null) disp=p; else disp+=(p-disp)*.3;
+  if(snap||disp===null) disp=p; else disp+=(p-disp)*.07;   // glide gently across each 1-second tick
   const n=Math.max(24,Math.min(50,Math.floor((W-80)/8))), cs=o.c.slice(-n);
   const L=10,R=W-78,T=50,B=H-14;
   let lo=Infinity,hi=-Infinity; for(const c of cs){lo=Math.min(lo,c.l);hi=Math.max(hi,c.h);}
   lo=Math.min(lo,disp); hi=Math.max(hi,disp);
   const cost=s.own?.t===s.sel?s.own.cost:null; if(cost){lo=Math.min(lo,cost);hi=Math.max(hi,cost);}
   const pad=(hi-lo)*.1||p*.01; lo-=pad; hi+=pad;
-  if(snap||yLo===null){yLo=lo;yHi=hi;} else {yLo+=(lo-yLo)*.15; yHi+=(hi-yHi)*.15;}
+  if(snap||yLo===null){yLo=lo;yHi=hi;} else {yLo+=(lo-yLo)*.05; yHi+=(hi-yHi)*.05;}
   const Y=v=>B-(v-yLo)/(yHi-yLo)*(B-T), slot=(R-L)/n, bw=Math.max(3,slot*.64);
   cs.forEach((c,i)=>{
     const x=L+i*slot+(slot-bw)/2, isLast=i===cs.length-1&&live;
