@@ -6,20 +6,20 @@ Copy these into Play Console under **Grow > Store presence > Main store listing*
 Tiny Trader
 
 **Short description** (80 characters max)
-A super simple stock market game. Pretend money, silly news, real fun.
+Day trade with pretend money. Live candlestick charts, silly news, quick trades.
 
 **Full description**
-Tiny Trader is the easiest way to see how the stock market works, with zero real money at risk.
+Tiny Trader is a super simple day-trading game played with pretend money.
 
-You start with $10,000 of pretend money and 30 days. Buy shares of six made-up companies, tap Next Day, and watch the prices move. Silly news headlines can send a stock flying or crashing. Sell for more than you paid to make a profit.
+You start with $10,000 and a 5-day week. Each trading day runs live from 9:30 AM to 4:00 PM in about two minutes. Candlestick bars grow and shrink in real time while you watch. Tap BUY when you think a stock will rise and SELL when it's up to lock in a profit.
 
-• Super simple: tap a company, pick how many shares, Buy or Sell
+• Live candlestick charts with volume bars, just like real trading apps
 • Six made-up companies, from calm Sloth Mattress to wild Moon Mining
-• Funny news headlines that move prices every day
-• Charts show where each price has been and what you paid
-• Finish a 30-day season and see if you beat the market average
-• Learn real ideas like risk, profit, loss, and diversifying
-• Plays fully offline. No ads, no accounts, no real money, no data collected.
+• Breaking news pops up any second and moves prices fast
+• One-tap trading: pick 1, 10, 100, or Max shares, then BUY or SELL
+• See exactly what you paid and your profit or loss as it changes
+• End each day with your results, and finish the week against the market average
+• Pause any time. Plays fully offline. No ads, no accounts, no real money, no data collected.
 
 Tiny Trader is just a game. The companies, news, and prices are all made up, and nothing in it is investing advice.
 
@@ -33,7 +33,7 @@ Tiny Trader is just a game. The companies, news, and prices are all made up, and
 |---|---|---|
 | App icon | icon-512.png | 512 x 512 PNG |
 | Feature graphic | feature-graphic-1024x500.png | 1024 x 500 |
-| Phone screenshots | screenshots/1-welcome.png to 4-results.png | 2 to 8 images, 1080 x 1920 |
+| Phone screenshots | screenshots/1-welcome.png to 4-market-closed.png | 2 to 8 images, 1080 x 1920 |
 
 ## Answers for the Play Console forms
 

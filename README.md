@@ -1,6 +1,6 @@
 # Tiny Trader
 
-A super simple stock market game played with pretend money. Start with $10,000, buy and sell shares of six made-up companies, tap Next Day, and react to silly news. After 30 days you see whether you beat the market average.
+A super simple day-trading game played with pretend money. Prices tick live on candlestick charts while news pops up. You start with $10,000, trade six made-up companies over a 5-day week (each day is about 2 minutes), and see whether you beat the market average.
 
 - **Play in a browser:** https://worthytoast.github.io/tiny-trader/
 - **Android app:** `android/` builds a signed Play Store bundle (`.aab`) that runs the same game offline.
@@ -14,7 +14,7 @@ The whole game is one HTML file, `src/game.html`, with no libraries. Everything 
 | `python tools/build.py` | Writes `docs/index.html` (web), `android/app/src/main/assets/index.html` (app), and `dist/artifact.html` (claude.ai copy). Run after every change to `src/game.html`. |
 | `bash tools/build_android.sh` | Signed `tiny-trader-<version>.aab` and `.apk` in `release/`. |
 | `python tools/make_icons.py` | Launcher icons, the 512 px store icon, and the feature graphic. |
-| `node tools/sim.js docs/index.html` | Headless test: plays hundreds of seasons with simple strategies and checks the trading rules. |
+| `node tools/sim.js docs/index.html` | Headless test: plays hundreds of weeks tick by tick with several strategies and checks the trading rules. |
 | `node tools/shoot.js` | Retakes the 1080 x 1920 store screenshots (needs `python -m http.server 8800 --directory docs` running). |
 
 The Android toolchain lives outside the repo in `C:\Users\liamb\tools\android` (JDK 17, Android SDK 36, Gradle 8.11.1). It is shared with the Wall Hop project.

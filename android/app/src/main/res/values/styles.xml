@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">Tiny Trader</string>
-    <color name="paper">#f7f9ff</color>
-    <color name="bg_icon">#ffe45c</color>
-    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+    <color name="paper">#0e1424</color>
+    <color name="bg_icon">#0e1424</color>
+    <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/paper</item>
         <item name="android:statusBarColor">@color/paper</item>
         <item name="android:navigationBarColor">@color/paper</item>

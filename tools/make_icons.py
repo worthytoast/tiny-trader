@@ -4,15 +4,14 @@ from PIL import Image, ImageDraw, ImageFont
 root = pathlib.Path(__file__).resolve().parent.parent
 YEL, INK, GREEN, WHITE, PAPER, GRID = "#ffe45c", "#1b2a4a", "#109e55", "#ffffff", "#f7f9ff", "#e3e9f8"
 
-def icon(px, bg=YEL):
+def icon(px, bg="#0e1424"):
     s = px / 108
     im = Image.new("RGBA", (px, px), bg); d = ImageDraw.Draw(im)
     S = lambda *v: [x * s for x in v]
-    d.rounded_rectangle(S(28, 30, 80, 78), radius=6 * s, fill=WHITE, outline=INK, width=max(1, round(3 * s)))
-    d.line(S(36, 66, 47, 56, 55, 61, 72, 42), fill=GREEN, width=max(2, round(5 * s)), joint="curve")
-    for x, y in ((36, 66), (47, 56), (55, 61)):
-        r = 2.5; d.ellipse(S(x - r, y - r, x + r, y + r), fill=GREEN)
-    d.polygon(S(64, 40, 74, 38, 72, 48), fill=GREEN)
+    RED, GRN = "#ff5a55", "#22d37f"
+    for col, wick, body in ((RED, (35, 50, 37, 74), (31, 56, 41, 68)), (GRN, (49, 44, 51, 68), (45, 48, 55, 62)),
+                            (RED, (63, 40, 65, 60), (59, 44, 69, 54)), (GRN, (77, 28, 79, 56), (73, 32, 83, 50))):
+        d.rectangle(S(*wick), fill=col); d.rectangle(S(*body), fill=col)
     return im
 
 res = root / "android/app/src/main/res"
@@ -26,17 +25,18 @@ big = icon(768); c = (768 - 512) // 2
 ic = big.crop((c, c, c + 512, c + 512)).convert("RGB")
 ic.save(store / "icon-512.png"); ic.save(root / "docs/icon-512.png"); ic.resize((192, 192), Image.LANCZOS).save(root / "docs/icon-192.png")
 
-fg = Image.new("RGB", (1024, 500), PAPER); d = ImageDraw.Draw(fg)
-for x in range(0, 1024, 32): d.line([(x, 0), (x, 500)], fill=GRID)
-for y in range(0, 500, 32): d.line([(0, y), (1024, y)], fill=GRID)
+import random
+random.seed(7)
+fg = Image.new("RGB", (1024, 500), "#0e1424"); d = ImageDraw.Draw(fg)
+for y in range(60, 500, 60): d.line([(0, y), (1024, y)], fill="#1a2440")
 f = ImageFont.truetype(str(root / "tools/LilitaOne.ttf"), 112); f2 = ImageFont.truetype(str(root / "tools/LilitaOne.ttf"), 34)
-d.text((70, 100), "Tiny", font=f, fill=INK)
-d.rectangle((66, 300, 470, 340), fill=YEL)
-d.text((70, 215), "Trader", font=f, fill=INK)
-d.text((74, 380), "Pretend money. Real fun.", font=f2, fill="#5d6b8a")
-pts = [(560, 400), (640, 330), (700, 360), (780, 250), (840, 280), (950, 120)]
-d.line(pts, fill=GREEN, width=14, joint="curve")
-for p in pts[:-1]: d.ellipse((p[0] - 9, p[1] - 9, p[0] + 9, p[1] + 9), fill=GREEN)
-d.polygon([(915, 110), (968, 100), (958, 152)], fill=GREEN)
+p = 330.0; x = 520
+while x < 1000:
+    o = p; p += random.gauss(-4.5, 14); h = min(o, p) - random.uniform(4, 18); l = max(o, p) + random.uniform(4, 18)
+    col = "#22d37f" if p <= o else "#ff5a55"
+    d.line([(x + 8, h), (x + 8, l)], fill=col, width=3); d.rectangle((x, min(o, p), x + 16, max(o, p) + 2), fill=col)
+    x += 24
+d.text((60, 110), "Tiny", font=f, fill="#eef2ff"); d.text((60, 225), "Trader", font=f, fill="#22d37f")
+d.text((64, 380), "Day trading with pretend money", font=f2, fill="#8c98bd")
 fg.save(store / "feature-graphic-1024x500.png")
 print("icons done")

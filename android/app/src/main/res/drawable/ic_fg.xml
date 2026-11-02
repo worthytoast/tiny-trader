@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 108dp adaptive foreground; the safe zone is the middle 66dp. A rising green chart line on a white card. -->
+<!-- 108dp adaptive foreground; safe zone is the middle 66dp. Four candlesticks climbing, last one green. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:strokeColor="#1B2A4A" android:strokeWidth="3"
-        android:pathData="M34,30 h40 a6,6 0 0 1 6,6 v36 a6,6 0 0 1 -6,6 h-40 a6,6 0 0 1 -6,-6 v-36 a6,6 0 0 1 6,-6z"/>
-    <path android:strokeColor="#109E55" android:strokeWidth="5" android:strokeLineCap="round" android:strokeLineJoin="round"
-        android:pathData="M36,66 L47,56 L55,61 L72,42"/>
-    <path android:fillColor="#109E55" android:pathData="M64,40 L74,38 L72,48z"/>
+    <path android:fillColor="#FF5A55" android:pathData="M35,50h2v24h-2z M31,56h10v12h-10z"/>
+    <path android:fillColor="#22D37F" android:pathData="M49,44h2v24h-2z M45,48h10v14h-10z"/>
+    <path android:fillColor="#FF5A55" android:pathData="M63,40h2v20h-2z M59,44h10v10h-10z"/>
+    <path android:fillColor="#22D37F" android:pathData="M77,28h2v28h-2z M73,32h10v18h-10z"/>
 </vector>
