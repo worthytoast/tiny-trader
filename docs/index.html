@@ -72,6 +72,28 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .ghost{background:none;border:0;color:var(--soft);font-weight:700;font-size:13px;text-decoration:underline;padding:8px;margin-top:6px}
 .toast{position:fixed;left:50%;top:40%;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 16px;
   font-weight:800;font-size:16px;z-index:9;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.btns{display:flex;gap:6px}
+.lesson .card{text-align:left}
+.lesson h2{text-align:center}
+.lesson .lost{font-family:var(--display);font-size:34px;text-align:center;margin:2px 0 8px}
+.lesson .box{background:var(--panel2);border-radius:12px;padding:10px 14px;margin:12px 0}
+.lesson .box b.h{display:block;font-family:var(--display);font-weight:400;font-size:18px;color:var(--up);margin-bottom:2px}
+.lesson ul{margin:4px 0 0;padding-left:20px;line-height:1.5}
+.lesson li{margin:3px 0}
+.why{color:var(--hi)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.btn2{border:0;border-radius:14px;padding:13px 8px;font-family:var(--display);font-size:19px}
+.btn2.dim{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.btn2.main{background:var(--blue);color:#fff}
+.note{color:var(--soft);font-size:12px;text-align:center;margin:10px 0 0}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--panel2);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;margin:14px 0}
+.switch span{font-weight:700;line-height:1.35}
+.switch small{display:block;color:var(--soft);font-weight:600;font-size:12px;margin-top:2px}
+.switch input{appearance:none;-webkit-appearance:none;width:52px;height:30px;border-radius:999px;background:var(--line);position:relative;flex:none;cursor:pointer;margin:0;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked{background:var(--up)}
+.switch input:checked::after{transform:translateX(22px)}
+.switch input:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 @media (max-height:640px){.worth{font-size:28px}.act{padding:12px 10px;font-size:26px}.app{gap:9px}}
 @media (prefers-reduced-motion:reduce){.tab.ping,.news.flash{animation:none}}
 </style>
@@ -86,7 +108,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     </div>
     <div class="right">
       <span class="clock num" id="clock">9:30 AM</span>
-      <button class="pause" id="pause">Pause</button>
+      <div class="btns"><button class="pause" id="pause">Pause</button><button class="pause" id="openSettings">Settings</button></div>
     </div>
   </div>
 
@@ -126,6 +148,40 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <p>You now have <b class="num" id="closedWorth"></b></p>
     <p class="fine" id="closedNote"></p>
     <button class="go" id="nextDay">Next day</button>
+  </div>
+</div>
+
+<div class="scrim lesson" id="lesson" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="lessonT">
+    <h2 id="lessonT">Why you lost money</h2>
+    <div class="lost num down" id="lessonLost"></div>
+    <p id="lessonWhat"></p>
+    <p class="why" id="lessonWhy"></p>
+    <div class="box">
+      <b class="h">How to make money</b>
+      <ul>
+        <li>Buy when you think the price will go <b class="up">up</b>.</li>
+        <li>Sell when the price is <b>higher</b> than what you paid. That's above the yellow line.</li>
+        <li>Good news often pushes a price up. Bad news often pulls it down.</li>
+        <li>If the price keeps falling, selling early keeps a small loss from getting bigger.</li>
+      </ul>
+    </div>
+    <div class="pair">
+      <button class="btn2 dim" id="lessonDismiss">Dismiss</button>
+      <button class="btn2 main" id="lessonAgain">Remind me again</button>
+    </div>
+    <p class="note">Dismiss turns these off. You can turn them back on in Settings.</p>
+  </div>
+</div>
+
+<div class="scrim" id="settings" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="settingsT">
+    <h2 id="settingsT">Settings</h2>
+    <label class="switch" for="optExplain">
+      <span>Explain when I lose money<small>After a sale that loses money, show why and how to make money.</small></span>
+      <input type="checkbox" id="optExplain" role="switch">
+    </label>
+    <button class="go" id="settingsDone">Done</button>
     <button class="ghost" id="restart">Start over with $10,000</button>
   </div>
 </div>
@@ -164,7 +220,7 @@ const clockStr=m=>{const t=570+m,h=Math.floor(t/60),mm=t%60,h12=((h+11)%12)+1;re
 
 /* ---------- state ---------- */
 // s.own is null (all cash) or {t, sh, cost}: you hold one company at a time, with all your money.
-let s, best=null, seenIntro=false;
+let s, best=null, seenIntro=false, opts={explain:true};
 function newGame(){ s={day:1,cash:START,own:null,st:{},sel:"PZZA",used:{}}; for(const x of STOCKS) s.st[x.t]={p:x.p,c:[],mom:0}; startDay(); }
 function startDay(){
   s.min=0; s.phase="open"; s.dayStart=worth(); s.news="The market is open!";
@@ -179,10 +235,10 @@ function startDay(){
   }
 }
 function load(){
-  try{const d=JSON.parse(localStorage.getItem(KEY)||"null"); if(d){best=d.best??null; seenIntro=!!d.seenIntro; if(d.s&&d.s.st) s=d.s;}}catch(e){}
+  try{const d=JSON.parse(localStorage.getItem(KEY)||"null"); if(d){best=d.best??null; seenIntro=!!d.seenIntro; if(d.opts) opts=Object.assign(opts,d.opts); if(d.s&&d.s.st) s=d.s;}}catch(e){}
   if(!s) newGame();
 }
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({s,best,seenIntro}));}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({s,best,seenIntro,opts}));}catch(e){}}
 const price=t=>s.st[t].p;
 const worth=()=>s.cash+(s.own?s.own.sh*price(s.own.t):0);
 
@@ -204,6 +260,7 @@ function tick(){
     target=pick(STOCKS); const good=Math.random()<.52;
     const size=target.risk==="wild"?.05+Math.random()*.1:target.risk==="calm"?.015+Math.random()*.025:.03+Math.random()*.05;
     shock=(good?1:-1)*size; s.news=headlineFor(target,good);
+    if(s.own&&s.own.t===target.t) s.own[good?"good":"bad"]=s.news;
   }
   const market=gauss()*.0006;
   for(const x of STOCKS){
@@ -225,7 +282,7 @@ function buy(){
   if(s.phase!=="open"||s.own) return;
   const p=price(s.sel), sh=Math.floor(s.cash/p);
   if(sh<1) return toast("Not enough cash");
-  s.own={t:s.sel,sh,cost:p}; s.cash=r2(s.cash-sh*p);
+  s.own={t:s.sel,sh,cost:p,at:s.min}; s.cash=r2(s.cash-sh*p);
   persist(); toast(`Bought ${byT[s.sel].n} at ${money(p)}`); buzz(15); render();
 }
 function sell(auto){
@@ -233,7 +290,9 @@ function sell(auto){
   const o=s.own, p=price(o.t), got=r2(o.sh*p), pl=got-o.sh*o.cost;
   s.cash=r2(s.cash+got); s.own=null; persist();
   if(!auto){toast(pl>=0?`You made ${signed(pl)}!`:`You lost ${money(-pl)}`); buzz(pl>=0?[15,60,15]:40);}
-  render(); return pl;
+  render();
+  if(pl<-0.004&&opts.explain) showLesson(o,p,-pl,auto);
+  return pl;
 }
 function act(){ s.own?sell(false):buy(); }
 
@@ -249,7 +308,8 @@ function closeMarket(){
   $("closedPL").textContent=money(Math.abs(pl)); $("closedPL").className="big num "+cls(pl);
   $("closedWorth").textContent=money(w);
   $("closedNote").textContent=auto?`At 4:00 we sold your ${auto.n} for you. Day traders always end the day in cash.`:"Best ever: "+money(best);
-  render(); $("closed").hidden=false;
+  render();
+  if(!$("lesson").hidden){ resumeAfter=false; afterLesson=()=>{$("closed").hidden=false;}; } else $("closed").hidden=false;
 }
 function nextDay(){ s.day++; startDay(); persist(); $("closed").hidden=true; render(); draw(true); paused=false; startLoop(); }
 
@@ -331,6 +391,34 @@ function draw(snap){
   ctx.fillStyle="#06121f"; ctx.fillText(money(disp),R+9,y);
 }
 
+/* ---------- "why you lost money" card and settings ---------- */
+let afterLesson=null, resumeAfter=false;
+function holdOn(){ if(s.phase==="open"&&!paused){ resumeAfter=true; setPaused(true); } }
+function letGo(){ if(resumeAfter&&$("lesson").hidden&&$("settings").hidden){ resumeAfter=false; setPaused(false); } }
+function showLesson(o,sold,lost,auto){
+  const n=byT[o.t].n, held=s.min-(o.at??s.min);
+  $("lessonLost").textContent="\u2212"+money(lost);
+  $("lessonWhat").innerHTML=`You bought ${n} at <b>${money(o.cost)}</b>. ${auto?"At 4:00 it was sold":"You sold it"} at <b>${money(sold)}</b>. `+
+    `The price went <b class="down">down</b> after you bought, so your shares were worth less than you paid.`;
+  let why="";
+  if(o.bad) why=`Bad news came out while you owned it: "${o.bad}". Bad news usually pulls a price down.`;
+  else if(auto) why="The market closed at 4:00 while the price was still lower than what you paid, so it was sold at a loss.";
+  else if(held<=3) why="You sold very quickly. Prices wiggle up and down a little all the time, so a quick sell can catch a small dip.";
+  else if(byT[o.t].risk==="wild") why=`${n} is a wild stock. Its price makes big jumps, both up and down.`;
+  else why="Prices go up and down, and nobody knows for sure which way they will go next. That is the risk of trading.";
+  $("lessonWhy").textContent=why;
+  holdOn();
+  $("lesson").hidden=false;
+  try{$("lessonAgain").focus({preventScroll:true});}catch(e){}
+}
+function closeLesson(turnOff){
+  $("lesson").hidden=true;
+  if(turnOff){ opts.explain=false; persist(); toast("Tips are off. Turn them on in Settings."); }
+  if(afterLesson){ const f=afterLesson; afterLesson=null; f(); } else letGo();
+}
+function openSettings(){ holdOn(); $("optExplain").checked=opts.explain; $("restart").textContent="Start over with $10,000"; $("restart").dataset.arm=""; $("settings").hidden=false; }
+function closeSettings(){ $("settings").hidden=true; letGo(); }
+
 /* ---------- loop ---------- */
 let paused=false, timer=null;
 function startLoop(){ if(timer||s.phase!=="open"||paused) return; timer=setInterval(()=>{tick(); render();},TICK_MS); }
@@ -345,17 +433,29 @@ $("act").onclick=act;
 $("pause").onclick=()=>setPaused(!paused);
 $("introGo").onclick=()=>{seenIntro=true;persist();$("intro").hidden=true;setPaused(false);};
 $("nextDay").onclick=nextDay;
-$("restart").onclick=()=>{newGame();persist();$("closed").hidden=true;render();draw(true);paused=false;startLoop();toast("Fresh start: $10,000");};
+$("restart").onclick=()=>{
+  const b=$("restart");
+  if(!b.dataset.arm){ b.dataset.arm="1"; b.textContent="Tap again to start over"; return; }
+  newGame(); persist(); for(const id of ["settings","closed","lesson"]) $(id).hidden=true; afterLesson=null; resumeAfter=false;
+  render(); draw(true); paused=false; startLoop(); toast("Fresh start: $10,000");
+};
+$("openSettings").onclick=openSettings;
+$("settingsDone").onclick=closeSettings;
+$("optExplain").onchange=e=>{ opts.explain=e.target.checked; persist(); toast(opts.explain?"Loss tips are on":"Loss tips are off"); };
+$("lessonDismiss").onclick=()=>closeLesson(true);
+$("lessonAgain").onclick=()=>closeLesson(false);
 document.addEventListener("visibilitychange",()=>{ if(document.hidden){ if(!paused&&s.phase==="open") setPaused(true); persist(); } });
 window.addEventListener("resize",()=>draw(true));
 
 // Android Back button: close the intro or pause; returning false lets the app close.
 window.appBack=()=>{
+  if(!$("lesson").hidden){closeLesson(false);return true;}
+  if(!$("settings").hidden){closeSettings();return true;}
   if(!$("intro").hidden){$("introGo").click();return true;}
   if(s.phase==="open"&&!paused){setPaused(true);return true;}
   return false;
 };
-window.__tt={get s(){return s},STOCKS,tick,worth,price,newGame,buy,sell,act,nextDay,closeMarket,select:t=>{s.sel=t;},setPaused,stopLoop,draw,render};
+window.__tt={get s(){return s},STOCKS,tick,worth,price,newGame,buy,sell,act,nextDay,closeMarket,select:t=>{s.sel=t;},get opts(){return opts},closeLesson,openSettings,closeSettings,isPaused:()=>paused,setPaused,stopLoop,draw,render};
 
 load(); buildTabs(); render(); draw(true); requestAnimationFrame(frame);
 if(s.phase==="closed") closeMarket();

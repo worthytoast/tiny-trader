@@ -15,6 +15,7 @@ The whole game is one HTML file, `src/game.html`, with no libraries. Everything 
 | `bash tools/build_android.sh` | Signed `tiny-trader-<version>.aab` and `.apk` in `release/`. |
 | `python tools/make_icons.py` | Launcher icons, the 512 px store icon, and the feature graphic. |
 | `node tools/sim.js docs/index.html` | Headless test: plays hundreds of days tick by tick with several strategies and checks the trading rules. |
+| `node tools/ui_test.js` | Browser test of the loss card, its two buttons, Settings, and Start over (needs the same local server as below). |
 | `node tools/shoot.js` | Retakes the 1080 x 1920 store screenshots (needs `python -m http.server 8800 --directory docs` running). |
 
 The Android toolchain lives outside the repo in `C:\Users\liamb\tools\android` (JDK 17, Android SDK 36, Gradle 8.11.1). It is shared with the Wall Hop project.
