@@ -1,6 +1,6 @@
 # Tiny Trader
 
-The simplest day-trading game: a live candlestick chart, three made-up companies, and one big button. BUY puts all your pretend money in, SELL cashes it all out. Each trading day takes about 6½ minutes, and you're cashed out automatically at 4:00 PM.
+A day-trading game played with pretend money, with two modes. Simple mode has a live candlestick chart, three made-up companies, and one big all-in BUY / SELL button. Pro mode (in Settings) adds six companies, share amounts, owning several at once, stop-loss, overnight holding, and a fuller chart. Each mode keeps its own $10,000.
 
 - **Play in a browser:** https://worthytoast.github.io/tiny-trader/
 - **Android app:** `android/` builds a signed Play Store bundle (`.aab`) that runs the same game offline.
@@ -15,7 +15,7 @@ The whole game is one HTML file, `src/game.html`, with no libraries. Everything 
 | `bash tools/build_android.sh` | Signed `tiny-trader-<version>.aab` and `.apk` in `release/`. |
 | `python tools/make_icons.py` | Launcher icons, the 512 px store icon, and the feature graphic. |
 | `node tools/sim.js docs/index.html` | Headless test: plays hundreds of days tick by tick with several strategies and checks the trading rules. |
-| `node tools/ui_test.js` | Browser test of the loss card, its two buttons, Settings, and Start over (needs the same local server as below). |
+| `node tools/ui_test.js` | Browser test of the loss card, its two buttons, Settings, Start over, and Pro mode (share amounts, several holdings, stop-loss, separate money) (needs the same local server as below). |
 | `node tools/shoot.js` | Retakes the 1080 x 1920 store screenshots (needs `python -m http.server 8800 --directory docs` running). |
 
 The Android toolchain lives outside the repo in `C:\Users\liamb\tools\android` (JDK 17, Android SDK 36, Gradle 8.11.1). It is shared with the Wall Hop project.
