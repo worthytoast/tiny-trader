@@ -1,0 +1,12 @@
+# secrets and machine-specific paths
+android/keystore.properties
+android/local.properties
+*.jks
+*.keystore
+# build output
+android/.gradle/
+android/build/
+android/app/build/
+release/
+dist/
+node_modules/
