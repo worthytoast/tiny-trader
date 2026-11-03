@@ -144,6 +144,23 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .help .bd p{margin:0 0 8px}
 .help .bd .ex{background:var(--panel);border-radius:10px;padding:8px 10px;font-weight:700}
 .help .bd .soon{color:var(--soft);font-size:13px}
+.ask{background:linear-gradient(135deg,rgba(77,124,255,.18),rgba(185,140,255,.18));border:1.5px solid var(--blue);border-radius:14px;padding:12px;margin:4px 0 12px}
+.ask .askh{font-family:var(--display);font-size:21px;line-height:1.1}
+.ask > small{display:block;color:var(--soft);font-size:12px;margin:3px 0 9px;line-height:1.35}
+.askrow{display:flex;gap:6px}
+.askrow input{flex:1;min-width:0;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:16px;-webkit-user-select:text;user-select:text}
+.askrow input:focus{outline:none;border-color:var(--blue)}
+.askrow button{flex:none;border:0;border-radius:10px;background:var(--blue);color:#fff;font-family:var(--display);font-size:17px;padding:0 14px}
+.askrow button:disabled{opacity:.5}
+.askchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.askchips button{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;color:var(--ink)}
+.askA{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.askA .qa{background:var(--panel);border-radius:10px;padding:9px 11px;font-size:15px;line-height:1.45}
+.askA .qa b{display:block;color:var(--hi);font-size:13px;margin-bottom:3px}
+.askA .qa .a{white-space:pre-wrap;-webkit-user-select:text;user-select:text}
+.askA .qa .a.wait{color:var(--soft);font-style:italic}
+.askA .qa .err{color:var(--soft);font-size:13px;margin-top:4px}
+.askA .qa button{margin-top:6px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-weight:800;font-size:12px;color:var(--ink)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .btn2{border:0;border-radius:14px;padding:13px 8px;font-family:var(--display);font-size:19px}
 .btn2.dim{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
@@ -354,7 +371,14 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 <div class="scrim help" id="help" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="helpT">
     <h2 id="helpT">How it works</h2>
-    <p class="intro">Tap anything to learn what it is and how it works.</p>
+    <div class="ask" id="ask">
+      <div class="askh" id="askT">&#128270; Ask a question</div>
+      <small id="askNote">Search the guide below.</small>
+      <div class="askrow"><input id="askQ" type="text" maxlength="300" autocomplete="off" enterkeyhint="send" placeholder="Like: what is a stop-loss?" aria-label="Your question"><button id="askGo">Ask</button></div>
+      <div class="askchips" id="askChips"></div>
+      <div class="askA" id="askA"></div>
+    </div>
+    <p class="intro">Or tap any topic to learn what it is and how it works.</p>
     <div id="helpList"></div>
     <button class="go" id="helpDone">Got it</button>
   </div>
@@ -999,6 +1023,90 @@ function showHelp(){
   });
   holdOn(); $("help").hidden=false; try{$("help").querySelector(".card").scrollTop=0;}catch(e){}
 }
+/* ---------- Ask AI (top of the guide) ----------
+   In the claude.ai version the page can ask Claude (the "sample" capability) on the viewer's own account.
+   Everywhere else (website, Android app) there is no AI, so the same box searches the guide instead. */
+let sampler=null, askCtl=null, askTurns=[];
+const ASK_EXAMPLES=["What is a stop-loss?","Why did the price just move?","What is an index fund?","How do real traders use a moving average?"];
+function setAskMode(){
+  $("askT").innerHTML=sampler?"&#10024; Ask AI":"&#128270; Ask a question";
+  $("askNote").textContent=sampler?"Ask anything about the game or how the stock market works. The AI can see your game right now.":"This searches the guide. (Ask AI with real answers works in the claude.ai version of the game.)";
+  const c=$("askChips"); c.innerHTML="";
+  for(const q of ASK_EXAMPLES){ const b=document.createElement("button"); b.textContent=q; b.onclick=()=>{ $("askQ").value=q; ask(); }; c.append(b); }
+}
+(async()=>{ try{ if(window.claude&&typeof window.claude.use==="function"){ const f=await window.claude.use("sample"); if(f){ sampler=f; setAskMode(); } } }catch(e){} })();
+const plainHtml=h=>h.replace(/<br>|<\/p>/g," ").replace(/<[^>]+>/g,"").replace(/&amp;/g,"&").replace(/\s+/g," ").trim();
+function guideText(){
+  return HELP.map(([g,items])=>g+":\n"+items.map(([,t,b])=>"- "+t+": "+plainHtml(b)).join("\n")).join("\n\n")+
+    "\n\nTrading School lessons:\n"+LESSONS.map((l,i)=>`${i+1}. ${l.title}: ${l.pts.join(" ")} ${l.real} Task: ${l.task}`).join("\n");
+}
+function stateText(){
+  const x=byT[s.sel], p=price(s.sel), open=M.phase==="open", k=ind(s.sel), lines=[];
+  lines.push(`Mode: ${isPro()?"Pro":"Simple"}. Day ${s.day}. ${open?"Market open, time "+clockStr(M.min):"Market closed for the day"}.`);
+  lines.push(`Player's money: ${money(worth())} (cash ${money(s.cash)}). Today so far: ${signed(worth()-s.dayStart)}.`);
+  lines.push(`Looking at: ${x.n}, price ${money(p)}, ${pct(p/M.st[s.sel].open-1)} since this morning's open of ${money(M.st[s.sel].open)}.`);
+  const own=owned(); if(!own.length) lines.push("Owns no shares right now.");
+  for(const t of own){ const h=s.hold[t]; lines.push(`Owns ${h.sh} shares of ${byT[t].n}, paid ${money(h.cost)} each, now ${money(price(t))}, ${signed(h.sh*(price(t)-h.cost))} so far`+(h.stop?`, stop-loss at -${h.stop}%`:"")+(h.tp?`, take-profit at +${h.tp}%`:"")+"."); }
+  if(k) lines.push(`Chart tools: 30-minute average ${money(k.ma)} (price is ${k.above?"above":"below"} it); floor ${money(k.sup)}, ceiling ${money(k.res)}.`);
+  lines.push(`Latest news: "${isPro()?M.news:M.newsS}".`);
+  if(!isPro()) lines.push(`Trading School: ${school.n} of ${LESSONS.length} lessons done. Tools the player has learned: ${LESSONS.filter(l=>known(l.id)).map(l=>l.title).join(", ")||"none yet"}.`);
+  const c=isPro()?"":coach(!!own.length); if(c) lines.push(`Coach line on screen: "${c}".`);
+  if(s.goal) lines.push(`Goal: ${goalText(s)}${s.goal.done?" (done)":""}. Stars: ${s.stars}. Rank: ${RANKS[rankOf(s.stars)][1]}.`);
+  return lines.join("\n");
+}
+const ASK_RULES=`You are the friendly coach inside Tiny Trader, a pretend-money day-trading game that teaches teenagers how the stock market works. Answer the player's question.
+Rules:
+- Use short, simple sentences that a middle schooler can read easily. Usually 2 to 5 sentences, never more than about 120 words.
+- Plain text only. No markdown, no bullet symbols, no headings, no emoji.
+- Use the game's own words (Tiny Market, purple line, green floor, red ceiling, take-profit, stop-loss) and name the real-world term when it helps.
+- For questions about the game, use the guide and the player's game below. If they don't cover it, say you're not sure instead of guessing.
+- You can explain how real stock markets work in general. Never tell the player what to buy or sell with real money, and never promise that a trade will win. Nobody knows for sure where a price goes next. For real-money questions, say this game is for learning and suggest talking with a parent or trusted adult.
+- In the game, you may say what the player's chart tools are showing, but say it's a hint, not a sure thing.
+- If the question isn't about the game, trading, money, or the stock market, kindly say you can only help with those.
+- Everything in the game (companies, prices, news) is made up.`;
+const ASK_ERR={rate_limited:"Too many questions at once. Wait a little and try again.",not_granted:"Ask AI isn't allowed in this view, so this box searches the guide instead.",sampling_disabled:"Ask AI isn't available on this account, so this box searches the guide instead.",
+  refused:"The AI couldn't answer that one. Try asking a different way.",empty_completion:"No answer came back. Try asking a different way.",session_expired:"Please sign in to claude.ai again, then ask.",upstream_error:"Something went wrong. Tap Try again."};
+const HIDE_AI=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
+function qaBox(q){ const d=document.createElement("div"); d.className="qa"; const b=document.createElement("b"); b.textContent=q; const a=document.createElement("div"); a.className="a"; d.append(b,a); $("askA").append(d); return {d,a}; }
+function searchGuide(q){
+  const STOP=new Set("the a an is are was what how why do does did i my me to of in on and or for it its this that with can you your about when where who will be get".split(" "));
+  const words=q.toLowerCase().replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w=>w.length>2&&!STOP.has(w)).map(w=>w.replace(/(ing|es|s)$/,""));
+  let best=null, bestScore=0;
+  HELP.forEach(([,items],gi)=>items.forEach((it,ii)=>{ const t=it[1].toLowerCase(), b=plainHtml(it[2]).toLowerCase(); let sc=0;
+    for(const w of words){ if(t.includes(w)) sc+=3; if(b.includes(w)) sc+=1; } if(sc>bestScore){ bestScore=sc; best={gi,ii,it}; } }));
+  return bestScore>=2?best:null;
+}
+async function ask(){
+  const q=$("askQ").value.trim(); if(!q) return;
+  $("askQ").value="";
+  const {d,a}=qaBox(q);
+  if(!sampler){
+    const hit=searchGuide(q);
+    if(hit){ a.textContent=`From the guide, "${hit.it[1]}": `+plainHtml(hit.it[2]);
+      const btn=document.createElement("button"); btn.textContent="Show it in the guide"; btn.onclick=()=>{ const det=[...document.querySelectorAll("#helpList details")]; let n=0;
+        HELP.forEach(([,items],gi)=>items.forEach((x,ii)=>{ if(gi===hit.gi&&ii===hit.ii){ det[n].open=true; try{det[n].scrollIntoView({behavior:"smooth",block:"start"});}catch(e){} } n++; })); }; d.append(btn); }
+    else a.textContent="I couldn't find that in the guide. Try other words, like \"stop-loss\", \"news\", or \"candles\". Or tap a topic below.";
+    try{d.scrollIntoView({block:"nearest"});}catch(e){} return;
+  }
+  a.textContent="Thinking..."; a.classList.add("wait"); $("askGo").disabled=true;
+  if(askCtl) askCtl.abort(); const ctl=askCtl=new AbortController();
+  const stop=document.createElement("button"); stop.textContent="Stop"; stop.onclick=()=>ctl.abort(); d.append(stop);
+  const input=[{role:"user",content:ASK_RULES+"\n\nGAME GUIDE:\n"+guideText()+"\n\nTHE PLAYER'S GAME RIGHT NOW:\n"+stateText()},...askTurns.slice(-8),{role:"user",content:q}];
+  try{
+    const {text,truncated}=await sampler(input,{modelTier:"quick",cache:false,signal:ctl.signal,onText:({text})=>{ a.classList.remove("wait"); a.textContent=text; }});
+    a.classList.remove("wait"); a.textContent=text+(truncated?" ...":"");
+    askTurns.push({role:"user",content:q},{role:"assistant",content:text});
+  }catch(e){
+    a.classList.remove("wait"); const code=e&&e.code;
+    if(code==="cancelled"){ a.textContent=(e.text||"")+(e.text?" ...":"Stopped."); }
+    else{
+      a.textContent=code==="refused"?"":(e&&e.text)||"";
+      const er=document.createElement("div"); er.className="err"; er.textContent=ASK_ERR[code]||ASK_ERR.upstream_error; d.append(er);
+      if(HIDE_AI.includes(code)){ sampler=null; setAskMode(); }
+      else if(code==="upstream_error"||!ASK_ERR[code]){ const again=document.createElement("button"); again.textContent="Try again"; again.onclick=()=>{ d.remove(); $("askQ").value=q; ask(); }; d.append(again); }
+    }
+  }finally{ stop.remove(); if(askCtl===ctl) askCtl=null; $("askGo").disabled=false; }
+}
 let schoolBack=null;
 function showSchool(i,fresh){
   const l=LESSONS[i];
@@ -1191,7 +1299,10 @@ $("restart").onclick=()=>{
 };
 $("openSettings").onclick=openSettings;
 $("openHelp").onclick=showHelp;
-$("helpDone").onclick=()=>{ $("help").hidden=true; letGo(); };
+$("helpDone").onclick=()=>{ if(askCtl) askCtl.abort(); $("help").hidden=true; letGo(); };
+$("askGo").onclick=ask;
+$("askQ").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); ask(); } });
+setAskMode();
 $("settingsDone").onclick=()=>{ closeSettings(); if($("proIntro").hidden&&afterLesson){const f=afterLesson; afterLesson=null; f();} };
 $("optExplain").onchange=e=>{ opts.explain=e.target.checked; persist(); toast(opts.explain?"Loss tips are on":"Loss tips are off"); };
 $("lessonDismiss").onclick=()=>closeLesson(true);

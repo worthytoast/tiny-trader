@@ -22,6 +22,10 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   check("tools not learned yet say which lesson unlocks them",await p.evaluate(()=>document.querySelectorAll("#help .lk").length===4));
   await p.click("#help details:nth-of-type(2) summary"); await wait(100);
   check("tapping a topic opens it",await p.evaluate(()=>document.querySelectorAll("#help details[open]").length===2));
+  check("Ask box sits at the top of the guide",await p.evaluate(()=>{const a=document.getElementById("ask"), l=document.getElementById("helpList"); return !!a&&(a.compareDocumentPosition(l)&Node.DOCUMENT_POSITION_FOLLOWING)>0;}));
+  check("without AI (website/app) the box says it searches the guide",await p.evaluate(()=>document.getElementById("askT").textContent.includes("Ask a question")&&document.getElementById("askNote").textContent.includes("claude.ai")));
+  await p.type("#askQ","what does a stop loss do"); await p.keyboard.press("Enter"); await wait(150);
+  check("asking without AI finds the right guide topic",await p.evaluate(()=>/stop-loss/i.test(document.querySelector("#askA .qa .a").textContent)));
   await p.click("#helpDone"); await wait(150);
   check("Got it closes the guide and resumes",!(await vis("help"))&&await p.evaluate(()=>!window.__tt.isPaused()));
   check("goal strip shows the lesson task",await p.evaluate(()=>document.getElementById("goalTxt").textContent.startsWith("Lesson 1")));
@@ -135,6 +139,18 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); while(T.s.phase==="open") T.tick();}); await wait(200);
   check("day-end card shows the goal and a rank",await p.evaluate(()=>/Goal (done|missed)/.test(document.getElementById("closedGoal").textContent)&&/Rookie|Trader|Hot Shot|Shark|Big Bull|Legend/.test(document.getElementById("closedRank").textContent)));
   console.log("   rank box:",await p.evaluate(()=>document.getElementById("closedRank").textContent));
+  // ---- Ask AI inside claude.ai: a pretend AI stands in for the real "sample" capability
+  { const q=await b.newPage(); q.on("pageerror",e=>errs.push(e.message)); await q.setViewport({width:390,height:844});
+    await q.evaluateOnNewDocument(()=>{ window.__asked=[]; const fake=async(input,opts)=>{ window.__asked.push(input); await new Promise(r=>setTimeout(r,50)); opts.onText({text:"A stop-loss sells",delta:"A stop-loss sells"}); return {text:"A stop-loss sells for you if the price falls too far.",truncated:false}; };
+      window.claude={use:async n=>n==="sample"?fake:null}; });
+    await q.goto(url); await wait(500); await q.click("#openHelp"); await wait(300);
+    check("in claude.ai the box becomes Ask AI",await q.evaluate(()=>document.getElementById("askT").textContent.includes("Ask AI")));
+    await q.click("#askChips button"); await wait(400);
+    check("Ask AI shows the answer",await q.evaluate(()=>document.querySelector("#askA .qa .a").textContent.startsWith("A stop-loss sells for you")));
+    check("the AI gets the rules, the guide, and the player's game",await q.evaluate(()=>{const c=window.__asked[0][0].content; return c.includes("Never tell the player what to buy or sell with real money")&&c.includes("GAME GUIDE")&&c.includes("Player's money");}));
+    await q.type("#askQ","and take-profit?"); await q.keyboard.press("Enter"); await wait(400);
+    check("follow-up questions keep the conversation",await q.evaluate(()=>window.__asked[1].length===4&&window.__asked[1][2].role==="assistant"));
+    await q.close(); }
   check("no page errors",errs.length===0); if(errs.length) console.log(errs);
   await b.close(); process.exit(fails?1:0);
 })();
