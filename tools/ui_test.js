@@ -18,7 +18,7 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   check("Start trading goes straight into the game (no extra card)",!(await vis("school"))&&await p.evaluate(()=>!window.__tt.isPaused()));
   await p.click("#openHelp"); await wait(150);
   check("? button opens How it works and pauses",(await vis("help"))&&await p.evaluate(()=>window.__tt.isPaused()));
-  check("guide covers the basics, chart tools, and Pro mode",await p.evaluate(()=>document.querySelectorAll("#help details").length>=20&&document.querySelectorAll("#help h3").length===3));
+  check("guide covers the basics, chart tools, words to know, and Pro mode",await p.evaluate(()=>document.querySelectorAll("#help details").length>=20&&document.querySelectorAll("#help h3").length===4));
   check("tools not learned yet say which lesson unlocks them",await p.evaluate(()=>document.querySelectorAll("#help .lk").length===4));
   await p.click("#help details:nth-of-type(2) summary"); await wait(100);
   check("tapping a topic opens it",await p.evaluate(()=>document.querySelectorAll("#help details[open]").length===2));
@@ -30,8 +30,18 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   check("Got it closes the guide and resumes",!(await vis("help"))&&await p.evaluate(()=>!window.__tt.isPaused()));
   check("goal strip shows the lesson task",await p.evaluate(()=>document.getElementById("goalTxt").textContent.startsWith("Lesson 1")));
   await p.evaluate(()=>{const T=window.__tt; T.act(); mv(1.03);}); await p.click("#act"); await wait(2300);
-  check("winning a trade opens lesson 2",(await vis("school"))&&await p.evaluate(()=>document.getElementById("schoolT").textContent==="Follow the trend"&&window.__tt.school.n===1));
+  check("winning a trade passes lesson 1 and opens its quiz",(await vis("quiz"))&&await p.evaluate(()=>window.__tt.school.n===1&&document.querySelectorAll("#quizBody .opts button").length===3));
+  check("quiz waits for an answer",await p.evaluate(()=>document.getElementById("quizGo").disabled&&window.__tt.isPaused()));
+  await p.click('#quizBody .opts button:not([data-ok="1"])'); await wait(100);
+  check("a wrong answer explains and lets you try again",await p.evaluate(()=>document.querySelector("#quizBody .fb").textContent.includes("Try again")&&document.getElementById("quizGo").disabled));
+  await p.click('#quizBody .opts button[data-ok="1"]'); await wait(100);
+  check("the right answer unlocks Next",await p.evaluate(()=>document.querySelector("#quizBody .fb").textContent.startsWith("Right!")&&!document.getElementById("quizGo").disabled));
+  await p.click("#quizGo"); await wait(100); await p.click('#quizBody .opts button[data-ok="1"]'); await wait(100); await p.click("#quizGo"); await wait(100);
+  check("score screen: a miss means no bonus star",await p.evaluate(()=>document.getElementById("quizT").textContent==="Quiz done!"));
+  await p.click("#quizGo"); await wait(200);
+  check("after the quiz, lesson 2 opens",(await vis("school"))&&!(await vis("quiz"))&&await p.evaluate(()=>document.getElementById("schoolT").textContent==="Follow the trend"));
   await p.click("#schoolGo"); await wait(150);
+  check("the coach walks you through lesson 2 step by step",await p.evaluate(()=>{const g=document.querySelector("#status .coach.guide"); return !!g&&/purple line/.test(g.textContent);}));
   check("goal strip moves on to lesson 2",await p.evaluate(()=>document.getElementById("goalTxt").textContent.startsWith("Lesson 2")));
   await p.click("#goal"); await wait(150);
   check("tapping the goal strip reopens the lesson",await vis("school"));
@@ -89,6 +99,7 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   console.log("   reason:",await p.evaluate(()=>document.getElementById("lessonWhy").textContent));
   await p.click("#lessonAgain"); await wait(150);
   check("then the day-end card appears",await vis("closed"));
+  check("day-end report card shows trades, a coach tip, and a fact",await p.evaluate(()=>/TRADES/.test(document.getElementById("closedStats").textContent)&&/Coach's tip/.test(document.getElementById("closedTip").textContent)&&/DID YOU KNOW/.test(document.getElementById("closedFact").textContent)));
   // start over needs two taps
   await p.click("#nextDay"); await wait(150); await p.click("#openSettings"); await p.click("#restart"); await wait(100);
   check("first tap on Start over only asks to confirm",await p.evaluate(()=>window.__tt.s.day>1));

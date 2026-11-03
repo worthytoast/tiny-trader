@@ -134,3 +134,11 @@ T.setSchool(6,6); T.s.goal=null; T.makeGoal(T.s); T.s.cash+=50; while(T.s.phase=
 console.log("ending a day up passes the last lesson:",T.school.n===7);
 T.nextDay(); console.log("after Trading School, normal goals come back:",T.s.goal.k!=="lesson");
 console.log("save size after school (bytes):",store["tinytrader.v5"].length);
+
+// ---- teaching: quizzes, guidance, report card
+console.log("every lesson has a 2-question quiz with 3 answers:",T.LESSONS.every(l=>T.QUIZ[l.id]&&T.QUIZ[l.id].length===2&&T.QUIZ[l.id].every(q=>q.o.length===3&&q.w)));
+T.fresh(); T.showSchool(0,true); T.closeSchool(); for(let i=0;i<30;i++) T.tick();
+console.log("lesson 1 guides you step by step:",/Step 1/.test(T.guide().text)&&T.guide().spot===true);
+win(); console.log("passing lesson 1 queues its quiz:",T.school.qp===0);
+while(T.s.phase==="open") T.tick();
+console.log("report card counts the day's trades:",/TRADES<b>1</.test($("closedStats").innerHTML)&&/Coach's tip/.test($("closedTip").innerHTML)&&/DID YOU KNOW/.test($("closedFact").innerHTML));

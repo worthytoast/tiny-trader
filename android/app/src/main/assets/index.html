@@ -126,6 +126,26 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .status small.coach{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.3}
 .ctype{position:absolute;right:10px;bottom:8px;z-index:2;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:4px 10px;font-weight:800;font-size:12px;color:var(--soft)}
 .goal.learn{cursor:pointer}
+.status small.coach.guide{background:rgba(77,124,255,.16);border:1.5px solid var(--blue);border-radius:12px;padding:7px 10px;margin-top:4px;color:var(--ink);font-size:14px}
+.act.spot{animation:spot 1.2s infinite}
+@keyframes spot{50%{box-shadow:0 0 0 5px rgba(255,216,74,.75),0 0 26px rgba(255,216,74,.6)}}
+.quiz .q{font-weight:800;font-size:18px;line-height:1.35;margin:10px 0 12px;text-align:left}
+.quiz .opts{display:flex;flex-direction:column;gap:8px}
+.quiz .opts button{background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:12px;font-weight:700;font-size:16px;text-align:left;color:var(--ink)}
+.quiz .opts button.right{border-color:var(--up);background:rgba(34,211,127,.15)}
+.quiz .opts button.wrong{border-color:var(--down);background:rgba(255,90,85,.12);opacity:.75}
+.quiz .fb{margin:12px 0 0;text-align:left;font-size:15px;line-height:1.45;border-radius:12px;padding:10px 12px;background:var(--panel2)}
+.quiz .fb b{display:block;margin-bottom:2px}
+.quiz .score{font-family:var(--display);font-size:40px;color:var(--hi);margin:8px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.stats div{background:var(--panel2);border-radius:10px;padding:6px 4px;font-size:11px;color:var(--soft);font-weight:800;letter-spacing:.04em}
+.stats b{display:block;font-family:var(--display);font-weight:400;font-size:20px;color:var(--ink);letter-spacing:0}
+.habit{font-size:14px;color:var(--soft);margin:4px 0}
+.tipline{background:var(--panel2);border-radius:12px;padding:9px 12px;text-align:left;font-size:15px;line-height:1.4;margin:8px 0}
+.tipline b{color:var(--up)}
+.fact{border:1.5px dashed var(--line);border-radius:12px;padding:9px 12px;text-align:left;font-size:14px;line-height:1.45;margin:8px 0}
+.fact b{color:var(--hi);display:block;font-size:12px;letter-spacing:.06em}
+@media (prefers-reduced-motion:reduce){.act.spot{animation:none;box-shadow:0 0 0 4px rgba(255,216,74,.75)}}
 .help .card{text-align:left}
 .help h2{text-align:center}
 .help .intro{text-align:center;color:var(--soft);margin:0 0 10px}
@@ -300,6 +320,10 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <div class="big num" id="closedPL"></div>
     <p>You now have <b class="num" id="closedWorth"></b></p>
     <p id="closedGoal"></p>
+    <div class="stats num" id="closedStats"></div>
+    <p class="habit" id="closedHabit"></p>
+    <p class="tipline" id="closedTip"></p>
+    <div class="fact" id="closedFact"></div>
     <div class="rank" id="closedRank"></div>
     <p class="fine" id="closedNote"></p>
     <button class="go" id="nextDay">Next day</button>
@@ -354,6 +378,15 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <p class="real" id="schoolReal"></p>
     <div class="task" id="schoolTask"></div>
     <button class="go" id="schoolGo">Let's try it</button>
+  </div>
+</div>
+
+<div class="scrim school quiz" id="quiz" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="quizT">
+    <div class="lbl" id="quizN"></div>
+    <h2 id="quizT">Quick quiz</h2>
+    <div id="quizBody"></div>
+    <button class="go" id="quizGo" disabled>Next</button>
   </div>
 </div>
 
@@ -486,7 +519,7 @@ function newGame(m){
   games[m]=g; if(m===mode) s=g; startGameDay(g);
   return g;
 }
-function startGameDay(g){ g.dayStart=worthOf(g); g.wins=0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); }
+function startGameDay(g){ g.dayStart=worthOf(g); g.wins=0; g.log=[]; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); }
 function worthOf(g){let v=g.cash;for(const t in g.hold) v+=g.hold[t].sh*M.st[t].p;return v;}
 const worth=()=>worthOf(s);
 const price=t=>M.st[t].p;
@@ -576,6 +609,38 @@ const LESSONS=[
   real:"Real traders call this position sizing. Many only risk a tiny part of their money on each trade."},
 ];
 const known=id=>LESSONS.findIndex(l=>l.id===id)<=school.seen;
+// A quick quiz after each lesson: answer right to unlock the next one. The first option is the right one (shuffled on screen).
+const QUIZ={
+ basics:[{q:"You bought at $100. The price is now $97. If you sell now, what happens?",o:["You lose $3 per share","You make $3 per share","Nothing, you get your $100 back"],w:"You sell at the price right now. $97 is $3 less than you paid, so each share loses $3."},
+         {q:"What does the yellow line on the chart show?",o:["The price you paid","The highest price today","Where the price will go next"],w:"The yellow line is what you paid. Above it you're winning, below it you're losing."}],
+ trend:[{q:"The price is above the purple line. What does that usually mean?",o:["The price is in an uptrend","The price is in a downtrend","The market is about to close"],w:"Above the moving average means prices have been rising lately: an uptrend."},
+        {q:"What is the purple line?",o:["The average price of the last 30 minutes","The price you paid for your shares","The lowest price of the whole day"],w:"It's a moving average: the average of recent prices. It smooths out the wiggles."}],
+ levels:[{q:"Where do prices often bounce back up?",o:["Near the green floor","Near the red ceiling","Right at 4:00 PM"],w:"The floor (support) is where buyers often step in, so prices tend to bounce up there."},
+         {q:"The price smashes up through the red ceiling. What is that called?",o:["A breakout","A stop-loss","A dividend"],w:"When the price breaks through a floor or ceiling, it often keeps going. That's a breakout."}],
+ exits:[{q:"You buy at $100 with a 2% stop-loss. When does it sell for you?",o:["If the price drops to $98","If the price rises to $102","Only at 4:00 PM"],w:"2% of $100 is $2, so the stop-loss sells at $100 − $2 = $98."},
+        {q:"Why do pros decide when they'll sell before they buy?",o:["So they follow a plan, not a feeling","Because it means they never lose","Because the market makes them do it"],w:"A plan keeps fear and hope from making the choice. Losses still happen, but they stay small."}],
+ news:[{q:"Bad news comes out about one of the six companies. What usually happens to the Tiny Market?",o:["It drops a little","It jumps way up","It doesn't move at all"],w:"The Tiny Market is made of all six companies, so bad news for one pulls it down a little."},
+       {q:"After big news moves a price, what happens next?",o:["It can keep going or fade back","It always keeps going","It always goes right back"],w:"Nobody knows for sure. Sometimes news moves keep going, and sometimes they fade."}],
+ candles:[{q:"A red candle means the price...",o:["Went down in those 5 minutes","Went up in those 5 minutes","Stayed exactly the same"],w:"Red candles close lower than they opened. Green candles close higher."},
+          {q:"What do a candle's thin lines (wicks) show?",o:["The highest and lowest price","The price you paid","How many people bought"],w:"The wick goes from the lowest price to the highest price in those 5 minutes."}],
+ size:[{q:"Why do pros only put a small part of their money in each trade?",o:["So one bad trade can't wipe them out","Because big trades are not allowed","Because small trades always win"],w:"If a small trade goes wrong, they still have most of their money to keep going."},
+       {q:"You have $10,000 and buy 10 shares at $100 each. How much money is in the trade?",o:["$1,000","$10,000","$100"],w:"10 shares × $100 = $1,000. The other $9,000 stays safe as cash."}],
+};
+// true facts about real markets, one on each day-end card
+const FACTS=[
+ "The New York Stock Exchange started in 1792, when 24 traders signed an agreement under a buttonwood tree on Wall Street.",
+ "Real US stock markets are open 9:30 AM to 4:00 PM Eastern Time, Monday to Friday, just like the Tiny Market.",
+ "The S&P 500 is an index of about 500 big US companies. Index funds that follow it let people own a tiny piece of all of them.",
+ "Studies of real day traders have found that most of them lose money over time. That's one reason many people invest for years instead.",
+ "A bull market is when prices rise for a long time. A bear market is a big drop, usually 20% or more from the top.",
+ "When you buy a real share, you own a tiny piece of a real company.",
+ "Some companies share part of their profits with the people who own their shares. That payment is called a dividend.",
+ "Prices move because of buyers and sellers. When more people want to buy than sell, the price goes up.",
+ "If US stock prices fall very fast in one day, trading pauses for a while to let everyone calm down. These pauses are called circuit breakers.",
+ "A company's earnings report (how much money it made) can move its stock price a lot in seconds.",
+ "Many professional traders keep a trading journal: what they bought, why, and what happened, so they can learn from mistakes.",
+ "Spreading money over many companies is called diversification. If one company does badly, the others can make up for it.",
+];
 const TECH=["trend","levels","exits"];   // after Trading School, daily goals can ask you to use these tools
 function techHit(id,ev,g){
   const win=ev&&ev.sell&&ev.pl>0.004, h=ev&&ev.h;
@@ -630,7 +695,7 @@ function goalUpdate(ev,g){
   else if(TECH.includes(o.k)) o.prog+=techHit(o.k,ev,g);
   if(o.prog>=o.n){
     o.done=true; const before=rankOf(g.stars); g.stars++;
-    if(o.k==="lesson"){ school.n=Math.max(school.n,o.i+1); setTimeout(lessonPassed,1700); }
+    if(o.k==="lesson"){ school.n=Math.max(school.n,o.i+1); school.qp=o.i; setTimeout(lessonPassed,1700); }
     persist();
     const up=rankOf(g.stars)>before; if(g!==s) return;
     setTimeout(()=>{
@@ -643,9 +708,44 @@ function goalUpdate(ev,g){
 // a lesson's task is done: the next lesson starts right away (or after the day-end card)
 function lessonPassed(){
   const g=games.simple; if(!g) return;
-  if(school.n>=LESSONS.length){ if(g===s) toast("\uD83C\uDF93 You finished Trading School!"); persist(); return; }
-  if(M.phase==="open"&&g.goal&&g.goal.done&&g.goal.k==="lesson"){ makeGoal(g); persist(); }
+  if(school.n<LESSONS.length&&M.phase==="open"&&g.goal&&g.goal.done&&g.goal.k==="lesson"){ makeGoal(g); persist(); }
   if(g===s){ render(); maybeSchool(); }
+}
+// quiz: one question at a time; a wrong answer explains and lets you try again; both right the first time = bonus star
+let quizAt=null;
+function showQuiz(i){
+  const l=LESSONS[i]; quizAt={i,k:0,miss:0};
+  $("quizN").textContent=`Lesson ${i+1} quiz · ${l.title}`;
+  clearTimeout(tt); $("toast").style.opacity=0; holdOn(); $("quiz").hidden=false; quizQuestion();
+}
+function quizQuestion(){
+  const Q=QUIZ[LESSONS[quizAt.i].id], item=Q[quizAt.k], order=[0,1,2].sort(()=>Math.random()-.5);
+  $("quizT").textContent=`Question ${quizAt.k+1} of ${Q.length}`;
+  const body=$("quizBody"); body.innerHTML="";
+  const q=document.createElement("p"); q.className="q"; q.textContent=item.q; body.append(q);
+  const opts=document.createElement("div"); opts.className="opts"; body.append(opts);
+  const fb=document.createElement("div"); fb.className="fb"; fb.hidden=true;
+  for(const j of order){ const b=document.createElement("button"); b.textContent=item.o[j]; b.dataset.ok=j===0?"1":"";
+    b.onclick=()=>{
+      if(j===0){ b.classList.add("right"); for(const x of opts.children) x.disabled=true; fb.innerHTML=`<b class="up">Right!</b>${item.w}`; fb.hidden=false; sfx("goal");
+        $("quizGo").disabled=false; $("quizGo").textContent=quizAt.k+1<Q.length?"Next question":"See my score"; }
+      else { b.classList.add("wrong"); b.disabled=true; quizAt.miss++; fb.innerHTML=`<b class="down">Not quite.</b>${item.w} Try again!`; fb.hidden=false; sfx("lose"); }
+    }; opts.append(b); }
+  body.append(fb);
+  $("quizGo").disabled=true; $("quizGo").textContent="Pick an answer";
+}
+function quizNext(){
+  const Q=QUIZ[LESSONS[quizAt.i].id];
+  if(quizAt.done){ $("quiz").hidden=true; school.qp=-1; persist(); quizAt=null;
+    if(school.n>=LESSONS.length){ toast("\uD83C\uDF93 You finished Trading School!"); letGo(); return; }
+    if(!maybeSchool()) letGo(); return; }
+  quizAt.k++;
+  if(quizAt.k<Q.length){ quizQuestion(); return; }
+  const perfect=quizAt.miss===0, g=games.simple; quizAt.done=true;
+  if(perfect&&g){ g.stars++; render(); confetti(80); sfx("goal"); }
+  $("quizT").textContent=perfect?"Perfect!":"Quiz done!";
+  $("quizBody").innerHTML=`<div class="score">${perfect?"2 of 2":"Done"}</div><p>${perfect?"You got every question right the first time. +1 &#11088; bonus star!":"You found every right answer. Mistakes are how traders learn!"}</p>`;
+  $("quizGo").disabled=false; $("quizGo").textContent=school.n>=LESSONS.length?"Finish Trading School":"Next lesson";
 }
 function renderGoal(){
   const o=s.goal; if(!o) return;
@@ -756,10 +856,13 @@ function sellShares(t,q,auto,g){
   if(me){
     popMoney(pl);
     if(pl>0.004){ sfx("win"); confetti(Math.min(90,20+Math.round(pl/15))); buzz([15,60,15]);
-      if([3,5,10,15,20].includes(g.streak)) setTimeout(()=>toast(`🔥 ${g.streak} wins in a row!`),900); }
+      const milestone=[3,5,10,15,20].includes(g.streak);
+      if(milestone) setTimeout(()=>toast(`🔥 ${g.streak} wins in a row!`),900);
+      const why=!isPro()&&winWhy(snap,auto); if(why) setTimeout(()=>toast(why),milestone?2700:900); }
     else if(pl<-0.004){ sfx("lose"); hurt(); buzz(60); }
     else sfx("buy");
   }
+  (g.log||(g.log=[])).push({pl:r2(pl),held:M.min-(snap.at??M.min),above:!!snap.above,nearSup:!!snap.nearSup,nearRes:!!snap.nearRes,afterGood:!!snap.afterGood,auto:auto||""});
   goalUpdate({sell:true,t,pl,held:M.min-(snap.at??M.min),h:snap,auto},g);
   persist();
   if(me){ render(); if(pl<-0.004&&opts.explain) showLesson(snap,p,-pl,auto); }
@@ -791,6 +894,34 @@ function closeMarket(){
   render();
   if(!$("lesson").hidden){ resumeAfter=false; afterLesson=()=>{$("closed").hidden=false;}; } else $("closed").hidden=false;
 }
+// after a win: which technique helped (only ones the player has learned)
+function winWhy(h,auto){
+  if(auto==="target"&&known("exits")) return "Your take-profit locked in the win!";
+  if(h.afterGood&&known("news")) return "You traded the good news. Nice!";
+  if(h.nearSup&&known("levels")) return "You bought near the floor and it bounced!";
+  if(h.above&&known("trend")) return "You followed the trend. Nice!";
+  return "You sold higher than you paid. That's a win!";
+}
+// the day-end report card: a mini trading journal with one tip based on what the player did
+function reportCard(g){
+  const L=g.log||[], n=L.length, w=L.filter(x=>x.pl>0.004).length, lo=L.filter(x=>x.pl<-0.004), best=n?Math.max(...L.map(x=>x.pl)):0, worst=n?Math.min(...L.map(x=>x.pl)):0;
+  $("closedStats").innerHTML=`<div>TRADES<b>${n}</b></div><div>WON<b class="up">${w}</b></div><div>LOST<b class="down">${lo.length}</b></div>`+
+    (n?`<div>BEST<b class="${cls(best)}">${signed(best)}</b></div><div>WORST<b class="${cls(worst)}">${signed(worst)}</b></div><div>WIN RATE<b>${Math.round(w/n*100)}%</b></div>`:"");
+  const habits=[];
+  if(n&&known("trend")) habits.push(`You bought in an uptrend ${L.filter(x=>x.above).length} of ${n} times.`);
+  if(n) habits.push(`Your trades lasted ${Math.round(L.reduce((a,x)=>a+x.held,0)/n)} minutes on average.`);
+  $("closedHabit").textContent=habits.join(" ");
+  let tip;
+  if(!n) tip="No trades today. That's OK! Sometimes waiting for a good chance is the smart move.";
+  else if(known("trend")&&lo.filter(x=>!x.above).length>=2) tip="Most of your losing trades were bought in a downtrend (under the purple line). Try waiting for an uptrend.";
+  else if(L.filter(x=>x.held<=3&&x.pl<0).length>=2) tip="You sold a lot of trades in under 3 minutes and lost. Little wiggles can trick you. Give trades more time.";
+  else if(L.some(x=>x.auto==="close"&&x.pl<0)) tip="Your shares were sold at 4:00 for a loss. Plan your exit before the day ends.";
+  else if(known("levels")&&lo.filter(x=>x.nearRes).length>=1) tip="You bought right under the red ceiling, where prices often turn down. Try buying near the green floor.";
+  else if(n>=3&&w/n>=.6) tip="You won most of your trades. Keep doing what worked!";
+  else tip=`You won ${w} of ${n} trade${n===1?"":"s"}. Every trade, win or lose, teaches you something.`;
+  $("closedTip").innerHTML=`<b>Coach's tip:</b> ${tip}`;
+  $("closedFact").innerHTML=`<b>DID YOU KNOW?</b>${FACTS[(g.day-1)%FACTS.length]}`;
+}
 function fillClosedCard(note){
   const w=worth(), pl=w-s.dayStart;
   $("closedT").textContent=`Day ${s.day} done`;
@@ -801,6 +932,7 @@ function fillClosedCard(note){
   const o=s.goal;
   $("closedGoal").innerHTML=o&&o.done?`&#127919; Goal done: <b>${goalText(s)}</b>. You earned a &#11088;!`:`&#127919; Goal missed: ${goalText(s)}. New goal tomorrow!`;
   const i=rankOf(s.stars), nx=RANKS[i+1];
+  reportCard(s);
   $("closedRank").innerHTML=`<small>${isPro()?"Pro rank":"Your rank"}</small><b>${RANKS[i][1]}</b>&#11088; ${s.stars} star${s.stars===1?"":"s"}`+
     (nx?`<small>${nx[0]-s.stars} more to ${nx[1]}</small>`:`<small>Top rank. You're a legend!</small>`);
 }
@@ -855,6 +987,33 @@ function render(){
   $("act").hidden=pro; $("duo").hidden=!pro; $("qtyRow").hidden=!pro; $("stopRow").hidden=!pro||!s.hold[s.sel];
   if(pro) renderPro(p); else renderSimple(x);
 }
+// during a lesson's task the coach walks the player through it, step by step, from what the chart is doing right now
+function guide(){
+  const o=s.goal; if(isPro()||!o||o.k!=="lesson"||o.done||M.phase!=="open") return null;
+  const id=LESSONS[o.i].id, t=owned()[0], h=t&&s.hold[t], k=ind(IDX.t), p=price(IDX.t), up=h&&p>h.cost, rn=recentNews();
+  const G=(text,spot)=>({text,spot:!!spot});
+  if(id==="basics"){ if(!h) return G("Step 1: Watch the line. When you think it will go up, tap BUY.",true);
+    return up?G("Step 2: The price is above your yellow line. Tap SELL to win!",true):G("Step 2: The price is under your yellow line. Wait for it to go up, then tap SELL."); }
+  if(id==="trend"){ if(!h) return k&&k.above?G("The price is above the purple line. That's an uptrend. Tap BUY now!",true):G("Wait. The price is under the purple line (downtrend). Buy when it goes above the line.");
+    if(!h.above) return G("This buy was under the purple line, so it won't count. Sell it, then buy when the price is above the line.");
+    return up?G("You bought in an uptrend and you're up! Tap SELL to finish the task.",true):G("Good buy! Now wait for the price to rise above your yellow line."); }
+  if(id==="levels"){ if(!h) return k&&k.nearSup?G("The price is near the green floor. Tap BUY now!",true):G("Wait for the price to drop close to the green floor, then tap BUY.");
+    if(!h.nearSup) return G("This buy wasn't near the floor, so it won't count. Sell it and try again near the green floor.");
+    return up?G("It bounced! Sell near the red ceiling for a bigger win, or tap SELL now.",true):G("Wait. Prices often bounce up off the floor."); }
+  if(id==="exits"){ if(!h) return G("Tap BUY. Two lines will appear: take-profit (green) and stop-loss (red).",true);
+    if(!h.tp) return G("This buy was before the lesson, so it has no lines. Sell it, then buy again.");
+    return G("Now wait, don't tap SELL! Your take-profit sells by itself if the price rises 3%."); }
+  if(id==="news"){ if(!h) return rn&&rn.good?G("Good news just came out! Tap BUY now.",true):G("Watch the news bar. When good news comes out, tap BUY quickly.");
+    if(!h.afterGood) return G("This buy wasn't right after good news, so it won't count. Sell it and wait for good news.");
+    return up?G("The news helped! Tap SELL to finish the task.",true):G("Wait. News moves can fade back, but they often keep going for a bit."); }
+  if(id==="candles"){ const cs=M.st.TINY.c, last=cs[cs.length-2], left=o.n-o.prog;
+    if(!h) return last&&last.c>last.o?G(`The last candle is green: the price went up. Tap BUY! (${left} win${left>1?"s":""} to go)`,true):G(`The last candle is red: the price went down. Wait for a green candle. (${left} win${left>1?"s":""} to go)`);
+    return up?G("You're up! Tap SELL to lock in the win.",true):G("Watch the candles. Green ones mean the price is rising."); }
+  if(id==="size"){ const day=worth()-s.dayStart;
+    if(h) return up?G("You're up. Selling now locks in the win.",true):G("Small losses are OK. If it keeps falling, selling early keeps it small.");
+    return day>0.004?G(`You're up ${money(day)} today. Keep it that way until 4:00!`):G("End today with more money than you started. Take small wins, and sell losers early."); }
+  return null;
+}
 // the coach: what the tools you've learned are saying right now
 function coach(holding){
   if(M.phase!=="open") return "";
@@ -869,15 +1028,20 @@ function coach(holding){
   return "";
 }
 function renderSimple(x){
-  const a=$("act"), t=owned()[0];
+  const a=$("act"), t=owned()[0], gd=guide();
+  a.classList.toggle("spot",!!(gd&&gd.spot));
+  if(gd){
+    const h=t&&s.hold[t], pl=h?h.sh*(price(t)-h.cost):0;
+    $("status").innerHTML=(h?`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`:"")+`<small class="coach guide">&#128216; ${gd.text}</small>`;
+  }
   if(t){
     const h=s.hold[t], pl=h.sh*(price(t)-h.cost), c=coach(true);
-    $("status").innerHTML=`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`+(c?`<small class="coach">${c}</small>`:"");
+    if(!gd) $("status").innerHTML=`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`+(c?`<small class="coach">${c}</small>`:"");
     a.className="act sell"+(pl>0.004?" glow":""); a.firstChild.nodeValue="SELL";
     $("actTxt").textContent=`Sell ${h.sh} ${byT[t].n} for ${money(h.sh*price(t))}`;
   }else{
     const c=coach(false);
-    $("status").innerHTML=M.phase!=="open"?"":c?`<small class="coach" style="font-size:15px">${c}</small>`:"Buy when you think it will go up";
+    if(!gd) $("status").innerHTML=M.phase!=="open"?"":c?`<small class="coach" style="font-size:15px">${c}</small>`:"Buy when you think it will go up";
     a.className="act buy"; a.firstChild.nodeValue="BUY";
     $("actTxt").textContent=`Buy 10 ${x.n} for ${money(SIMPLE_QTY*price(x.t))}`;
   }
@@ -973,7 +1137,7 @@ function draw(snap){
 /* ---------- "why you lost money" card and settings ---------- */
 let afterLesson=null, resumeAfter=false;
 function holdOn(){ if(M.phase==="open"&&!paused){ resumeAfter=true; setPaused(true); } }
-const cardsShut=()=>["lesson","settings","proIntro","school","schoolAll","intro","help"].every(id=>$(id).hidden);
+const cardsShut=()=>["lesson","settings","proIntro","school","schoolAll","intro","help","quiz"].every(id=>$(id).hidden);
 function letGo(){ if(resumeAfter&&cardsShut()){ resumeAfter=false; setPaused(false); } }
 /* ---------- "How it works" guide: what every part of the screen is ---------- */
 const HELP=[
@@ -986,9 +1150,9 @@ const HELP=[
   ["\uD83D\uDCF0","News",`<p>Headlines about the six companies. <b class="up">Good news</b> usually pushes prices up. <b class="down">Bad news</b> usually pulls them down.</p><p><b>BREAKING</b> means big news that can move the price a lot, fast.</p><p>The news is made up, but real prices react to real news the same way.</p>`],
   ["\uD83D\uDFE2","BUY and SELL",`<p><b class="up">BUY</b> gets you 10 shares at the price right now. A share is a tiny piece of the market.</p><p><b class="down">SELL</b> sells all 10 at the price right now.</p><p>You make or lose the difference, times 10:</p><p class="ex">Buy at $100.00, sell at $103.00<br>$3.00 × 10 shares = <span class="up">+$30.00</span></p>`],
   ["\uD83D\uDFE8","The yellow line",`<p>After you buy, a yellow line shows the price you paid.</p><p>If the price is <b>above</b> the yellow line, selling now makes money. If it's <b>below</b>, selling now loses money.</p>`],
-  ["\uD83D\uDD14","4:00 PM: the market closes",`<p>Day traders don't keep shares overnight, because prices can jump while the market is closed.</p><p>So anything you still own at 4:00 is sold for you. Then a card shows how your day went, and the next day starts when you're ready.</p>`],
+  ["\uD83D\uDD14","4:00 PM: the market closes",`<p>Day traders don't keep shares overnight, because prices can jump while the market is closed.</p><p>So anything you still own at 4:00 is sold for you. Then a report card shows how your day went: your trades, wins and losses, a tip from the coach based on what you did, and a true fact about real stock markets.</p>`],
   ["\uD83C\uDFAF","Goals, stars, ranks, and streaks",`<p>Each day has one goal at the top. Finish it to earn a \u2B50 star.</p><p>Stars raise your rank: Rookie, Trader, Hot Shot, Shark, Big Bull, and Legend.</p><p>\uD83D\uDD25 counts how many trades in a row you've won. A losing trade resets it.</p>`],
-  ["\uD83D\uDCD8","Trading School",`<p>Seven short lessons on real tricks traders use. Each lesson adds a tool to your chart and gives you a task to try it.</p><p>Finish the task to unlock the next lesson. Tap the goal bar to read the lesson you're on. <b>Settings › Trading School</b> lists every lesson.</p>`],
+  ["\uD83D\uDCD8","Trading School",`<p>Seven short lessons on real tricks traders use. Each lesson adds a tool to your chart and gives you a task to try it.</p><p>While you work on a task, the blue box under the chart tells you what to do, step by step. Finish the task, then pass a quick 2-question quiz to unlock the next lesson. Get both right the first time for a bonus ⭐.</p><p>Tap the goal bar to read the lesson you're on. <b>Settings › Trading School</b> lists every lesson.</p>`],
   ["\uD83D\uDCAC","The coach line",`<p>The words under the chart tell you what your tools are showing right now, like "Uptrend" or "Near the green floor."</p><p>It's a hint, not a promise. Nobody knows for sure where a price will go next.</p>`],
   ["\u2753","The \"You lost money\" card",`<p>After a sale that loses money, a card shows what you paid, what you sold for, and the most likely reason it went wrong, plus a tip.</p><p>Tap <b>+ Why so much?</b> to see the math. <b>Dismiss</b> turns the cards off. You can turn them back on in Settings.</p>`],
  ]],
@@ -997,6 +1161,19 @@ const HELP=[
   ["\uD83E\uDDF1","Floor and ceiling: support and resistance",`<p>The <b class="up">green floor</b> is the lowest price of the last hour. The <b class="down">red ceiling</b> is the highest.</p><p>Prices often bounce up off the floor and turn down at the ceiling. When the price breaks through one, it often keeps going. That's a <b>breakout</b>.</p>`,"levels"],
   ["\uD83C\uDFAF","Take-profit and stop-loss",`<p>Every buy gets two lines that sell for you automatically.</p><p><b class="up">Take-profit</b> sells when you're up 3%. <b class="down">Stop-loss</b> sells if you're down 2%.</p><p class="ex">Buy at $100.00: take-profit sells at $103.00, stop-loss sells at $98.00</p><p>Your wins are bigger than your losses, so you can be wrong sometimes and still come out ahead.</p>`,"exits"],
   ["\uD83D\uDD6F\uFE0F","Candlesticks",`<p>Each candle is 5 minutes. A <b class="up">green</b> candle means the price went up in those 5 minutes. <b class="down">Red</b> means it went down.</p><p>The thick part shows where the price started and ended. The thin lines (wicks) show the highest and lowest price.</p><p>The <b>Line / Candles</b> button on the chart switches between the two.</p>`,"candles"],
+ ]],
+ ["Words to know",[
+  ["\uD83E\uDDE9","Stock and share",`<p>A <b>stock</b> is a piece of a company that people can buy. Each piece is called a <b>share</b>.</p><p>If the company does well, its shares usually become worth more. If it does badly, they're usually worth less.</p>`],
+  ["\uD83C\uDFDB\uFE0F","Stock market",`<p>A place where people buy and sell shares. Prices change because of buyers and sellers.</p><p>When more people want to buy than sell, the price goes up. When more want to sell, it goes down.</p>`],
+  ["\uD83E\uDDFA","Index fund and diversification",`<p>An <b>index fund</b> owns a little of many companies at once, like the Tiny Market. The S&amp;P 500 is a famous index of about 500 big US companies.</p><p>Spreading money over many companies is called <b>diversification</b>. If one company does badly, the others can make up for it.</p>`],
+  ["\uD83C\uDFF7\uFE0F","Ticker symbol",`<p>A short code of letters for each company on the stock market, like a nickname. Traders use tickers to look up prices fast.</p>`],
+  ["\uD83D\uDC02","Bull market and bear market",`<p>A <b>bull market</b> is when prices rise for a long time. Bulls push their horns <b>up</b>.</p><p>A <b>bear market</b> is a big drop, usually 20% or more from the top. Bears swipe their paws <b>down</b>.</p>`],
+  ["\uD83C\uDFA2","Volatility",`<p>How much a price jumps around. A very volatile stock can win big or lose big in a short time. A calm one moves slowly.</p>`],
+  ["\uD83D\uDCB8","Dividend",`<p>Some companies share part of their profits with the people who own their shares. That payment is a <b>dividend</b>. (This game doesn't have dividends.)</p>`],
+  ["\uD83E\uDD1D","Broker",`<p>The company that does the buying and selling for you. In real life you need an account with a broker, and people under 18 need an adult to help.</p>`],
+  ["\u2194\uFE0F","Spread",`<p>The small gap between what buyers will pay and what sellers will take. In real markets it's a hidden cost of every trade. (This game has no spread.)</p>`],
+  ["\u23F3","Day trading vs. investing",`<p><b>Day traders</b> buy and sell within one day, like in this game. <b>Investors</b> buy and hold for months or years.</p><p>Studies of real day traders have found that most of them lose money over time. That's one reason many people invest for the long term instead.</p>`],
+  ["\uD83D\uDCD3","Trading journal",`<p>A record of every trade: what you bought, why, and what happened. Pros use one to learn from their mistakes. The report card at the end of each day in this game is a mini trading journal.</p>`],
  ]],
  ["Pro mode (in Settings)",[
   ["\uD83D\uDDC2\uFE0F","Company tabs",`<p>Pro mode lets you trade all six companies one by one instead of the Tiny Market.</p><p>Each tab shows the price and how much it changed since the morning. A yellow underline means you own some. A tab flashes when it has news.</p><p>Each company has a risk label: <b>calm</b> moves a little, <b>medium</b> more, and <b>wild</b> makes big jumps.</p>`],
@@ -1115,11 +1292,13 @@ function showSchool(i,fresh){
   $("schoolTask").innerHTML=`<small>${done?"DONE &#10003;":"YOUR TASK"}</small>${l.task}`;
   $("schoolGo").textContent=fresh?"Let's try it":"Got it";
   if(i>school.seen){ school.seen=i; if(l.id==="candles") opts.chart="candle"; persist(); render(); draw(true); }
-  holdOn(); $("school").hidden=false;
+  clearTimeout(tt); $("toast").style.opacity=0; holdOn(); $("school").hidden=false;
 }
 // show the next lesson card if one is waiting (Simple mode, market open, nothing else on screen)
 function maybeSchool(){
-  if(isPro()||M.phase!=="open"||school.n>=LESSONS.length||school.seen>=school.n||!cardsShut()||!$("closed").hidden) return false;
+  if(isPro()||M.phase!=="open"||!cardsShut()||!$("closed").hidden) return false;
+  if(school.qp>=0&&QUIZ[LESSONS[school.qp].id]){ showQuiz(school.qp); return true; }
+  if(school.n>=LESSONS.length||school.seen>=school.n) return false;
   showSchool(school.n,true); return true;
 }
 function showSchoolList(){
@@ -1266,7 +1445,7 @@ function frame(){
 }
 function setPaused(v){ paused=v; v?stopLoop():startLoop(); render(); }
 
-let tt=0; function toast(m){const e=$("toast");e.textContent=m;e.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>e.style.opacity=0,1600);}
+let tt=0; function toast(m){const e=$("toast"); if(!$("quiz").hidden||!$("school").hidden) return;e.textContent=m;e.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>e.style.opacity=0,1600);}
 function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}}
 
 $("act").onclick=act;
@@ -1282,6 +1461,7 @@ $("optSound").onchange=e=>{ opts.sound=e.target.checked; persist(); if(opts.soun
 document.addEventListener("pointerdown",()=>audio(),{once:true});
 $("introGo").onclick=()=>{seenIntro=true; school.seen=Math.max(school.seen,0); persist(); $("intro").hidden=true; render(); setPaused(false);};   // the intro already covers lesson 1
 $("schoolGo").onclick=closeSchool;
+$("quizGo").onclick=quizNext;
 $("openSchool").onclick=showSchoolList;
 $("schoolAllDone").onclick=()=>{ $("schoolAll").hidden=true; letGo(); };
 $("goal").onclick=()=>{ const o=s.goal; if(!isPro()&&o&&o.k==="lesson") showSchool(o.i,false); };
@@ -1318,6 +1498,7 @@ window.appBack=()=>{
   if(!$("lesson").hidden){closeLesson(false);return true;}
   if(!$("help").hidden){$("helpDone").click();return true;}
   if(!$("school").hidden){closeSchool();return true;}
+  if(!$("quiz").hidden) return true;   // finish the quiz first
   if(!$("schoolAll").hidden){$("schoolAllDone").click();return true;}
   if(!$("settings").hidden){$("settingsDone").click();return true;}
   if(!$("proIntro").hidden){$("proIntroGo").click();return true;}
@@ -1329,7 +1510,7 @@ const MK=new Set(["st","min","phase","news","newsBig","used","gapNext"]);
 window.__tt={makeGoal,get s(){return new Proxy(s,{get:(g,k)=>MK.has(k)?M[k]:g[k],set:(g,k,v)=>{(MK.has(k)?M:g)[k]=v;return true;}});},get m(){return M},
   fresh:()=>{newMarket(); games={simple:null,pro:null}; school={n:0,seen:-1}; newGame(mode); lastP=null; buildTabs(); render(); draw(true);},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
   act,buyShares,sellShares,setQty:q=>{qtyMode=String(q);},nextDay,closeMarket,select:t=>{s.sel=t;},setMode,setPaused,stopLoop,draw,render,
-  closeLesson,openSettings,closeSettings,showHelp,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,ind,LESSONS,showSchool,closeSchool,get school(){return school},setSchool:(n,seen)=>{school={n,seen:seen??n};},
+  closeLesson,openSettings,closeSettings,showHelp,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,ind,LESSONS,showSchool,closeSchool,QUIZ,showQuiz,guide,get school(){return school},setSchool:(n,seen)=>{school={n,seen:seen??n};},
   get own(){const t=Object.keys(s.hold)[0];return t?Object.assign({t},s.hold[t]):null;}};
 
 load(); buildTabs(); render(); draw(true); requestAnimationFrame(frame);

@@ -16,7 +16,9 @@ Watch the live price line go up and down. Tap BUY when you think the price will 
 • One big button: BUY gets 10 shares, SELL sells them
 • Trade the Tiny Market: six made-up companies rolled into one price, like a real index fund
 • Trading School: 7 short lessons on real techniques (moving averages, support and resistance, take-profit and stop-loss, trading the news, candlesticks, and not betting it all). Each one adds its tool to your chart and gives you a task to practice it
-• A live coach tells you what your chart tools are showing
+• A coach walks you through each lesson step by step, then a quick quiz checks what you learned
+• A report card after every day: your trades, win rate, a tip based on how you played, and a true fact about real stock markets
+• A How it works guide with a Words to know glossary (stock, share, index fund, bull and bear markets, and more)
 • Funny news headlines that make prices jump or crash
 • Lose money? A simple tip explains why and how to do better (you can turn tips off in Settings)
 • A new goal every day: finish it to earn stars and rank up from Rookie to Legend
