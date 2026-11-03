@@ -660,7 +660,8 @@ function renderSimple(x){
   const a=$("act"), t=owned()[0];
   if(t){
     const h=s.hold[t], pl=h.sh*(price(t)-h.cost);
-    $("status").innerHTML=`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`;
+    $("status").innerHTML=t===s.sel?`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`
+      :`You own <b>${byT[t].n}</b>, not ${byT[s.sel].n} · <b class="${cls(pl)}">${signed(pl)}</b>`;
     a.className="act sell"+(pl>0.004?" glow":""); a.firstChild.nodeValue="SELL";
     $("actTxt").textContent=`Sell ${h.sh} ${byT[t].n} for ${money(h.sh*price(t))}`;
   }else{
@@ -746,7 +747,8 @@ function showLesson(h,sold,lost,auto){
   $("lessonLost").textContent="−"+money(lost);
   $("lessonWhat").innerHTML=`<div>You paid<b class="num">${money(h.cost)}</b></div><div class="arrow">→</div><div>${auto==="close"?"Sold at 4:00":auto==="stop"?"Stop-loss sold":"You sold"}<b class="num down">${money(sold)}</b></div>`;
   let why, tip;
-  if(auto==="stop"){ why="Your stop-loss sold it to stop a bigger loss."; tip="Nice! A stop-loss is a safety net."; }
+  if(!auto&&s.sel!==h.t){ why=`You sold your ${n} at ${n}'s price. ${byT[s.sel].n} has its own price.`; tip=`SELL always sells what you own. Look at ${n}'s chart to see its price.`; }
+  else if(auto==="stop"){ why="Your stop-loss sold it to stop a bigger loss."; tip="Nice! A stop-loss is a safety net."; }
   else if(h.bad){ why=`Bad news: “${h.bad}”`; tip="Bad news makes prices drop. Watch the news bar."; }
   else if(auto==="close"){ why="The day ended before the price came back up."; tip="At 4:00 everything is sold. Sell early if you're up."; }
   else if(held<=3){ why="You sold too fast."; tip="Prices wiggle all the time. Wait a few minutes."; }
@@ -757,7 +759,8 @@ function showLesson(h,sold,lost,auto){
   const q=h.q||1, per=lost/q, drop=1-sold/h.cost, sh=k=>`${k} share${k>1?"s":""}`;
   const rows=[1,10,100].map(k=>`<tr${k===q?' class="you"':""}><td>${sh(k)}${k===q?" (you)":""}</td><td class="down">−${money(per*k)}</td></tr>`).join("")+
     ([1,10,100].includes(q)?"":`<tr class="you"><td>${sh(q)} (you)</td><td class="down">−${money(lost)}</td></tr>`);
-  $("lessonDetail").innerHTML=
+  const other=!auto&&s.sel!==h.t;
+  $("lessonDetail").innerHTML=(other?`<p>You were looking at <b>${byT[s.sel].n}</b> (${money(price(s.sel))}), but you owned <b>${n}</b>. Each company has its own price, so your ${n} was sold at <b>${money(sold)}</b>.</p>`:"")+
     `<p>Each share lost <b class="down">${money(per)}</b>. You paid ${money(h.cost)} and sold for ${money(sold)}. That's a drop of ${pct(drop).replace(/^[-+−]/,"")}.</p>`+
     `<p>You had <b>${sh(q)}</b>, so every share lost that much:</p>`+
     `<div class="math">${q} × ${money(per)} = <span class="down">${money(lost)}</span></div>`+
