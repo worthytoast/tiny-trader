@@ -237,6 +237,34 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 @media (max-height:700px){.goal{padding:4px 10px}.pro .worth{font-size:26px}.pro .chips button{padding:5px 0}.pro .duo .act{padding:8px 6px;font-size:19px}}
 @media (max-height:640px){.worth{font-size:28px}.act{padding:12px 10px;font-size:26px}.app{gap:9px}}
 @media (prefers-reduced-motion:reduce){.tab.ping,.news.flash,.clock.urgent,.act.glow,.goal.cheer,.news .tag.hot,.edge.hit{animation:none}}
+.chip{flex:none;border:0;background:var(--panel2);border-radius:8px;padding:3px 7px;font-weight:800;font-size:13px;color:var(--hi);line-height:1.2}
+.chip.racec{color:var(--ink)}
+@media (max-width:400px){.chip .ord{display:none}.goal{gap:7px}}
+.chip.spot{animation:spot 1.2s infinite}
+.medal{position:fixed;left:50%;top:10px;transform:translate(-50%,-160%);z-index:10;display:flex;align-items:center;gap:10px;text-align:left;background:linear-gradient(135deg,#3a2f0c,#26324f);border:1.5px solid var(--hi);border-radius:14px;padding:8px 16px 8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.45);transition:transform .35s;pointer-events:none;max-width:92vw}
+.medal.show{transform:translate(-50%,0)}
+.medal .mi{font-size:32px;flex:none}
+.medal small{display:block;color:var(--hi);font-size:11px;letter-spacing:.08em;font-weight:800}
+.medal b{font-family:var(--display);font-weight:400;font-size:20px;display:block;line-height:1.1}
+.medal span.d{display:block;font-size:12px;color:var(--soft);font-weight:700}
+.board{display:flex;flex-direction:column;gap:6px;margin:12px 0;text-align:left}
+.board .rw{display:flex;align-items:center;gap:9px;background:var(--panel2);border-radius:12px;padding:8px 10px;border:1.5px solid transparent}
+.board .rw.you{border-color:var(--hi)}
+.board .pos{flex:none;width:28px;text-align:center;font-family:var(--display);font-size:20px}
+.board .av{flex:none;font-size:24px;width:30px;text-align:center}
+.board .nm{flex:1;min-width:0;font-weight:800;font-size:15px}
+.board .nm small{display:block;color:var(--soft);font-weight:600;font-size:12px;line-height:1.3;margin-top:1px}
+.board .v{flex:none;font-family:var(--display);font-size:19px}
+.bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.bgrid div{background:var(--panel2);border-radius:12px;padding:10px 4px;font-size:12px;font-weight:800;line-height:1.25;border:1.5px solid var(--line)}
+.bgrid div .bi{display:block;font-size:28px;margin-bottom:4px}
+.bgrid div small{display:block;color:var(--soft);font-weight:600;font-size:11px;margin-top:3px}
+.bgrid div.got{border-color:var(--hi);background:rgba(255,216,74,.08)}
+.bgrid div.no .bi{filter:grayscale(1);opacity:.35}
+.racebox{background:var(--panel2);border-radius:12px;padding:9px 12px;margin:8px 0;text-align:left;font-size:14px;line-height:1.5}
+.racebox b.h{color:var(--hi);display:block;font-size:12px;letter-spacing:.06em}
+.newb{color:var(--hi);font-weight:800;margin:8px 0 0}
+@media (prefers-reduced-motion:reduce){.chip.spot{animation:none;box-shadow:0 0 0 3px rgba(255,216,74,.75)}.medal{transition:none}}
 </style>
 
 </head>
@@ -254,7 +282,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     </div>
   </div>
 
-  <div class="goal" id="goal"><span class="gi" aria-hidden="true">&#127919;</span><div class="gm"><div class="gt" id="goalTxt"></div><div class="bar"><i id="goalBar"></i></div></div><span class="streak" id="streak" hidden></span><span class="stars num" id="stars"></span></div>
+  <div class="goal" id="goal"><span class="gi" aria-hidden="true">&#127919;</span><div class="gm"><div class="gt" id="goalTxt"></div><div class="bar"><i id="goalBar"></i></div></div><span class="streak" id="streak" hidden></span><button class="chip racec num" id="raceChip" hidden></button><button class="chip stars num" id="stars" aria-label="Stars and badges"></button></div>
 
   <div class="tabs" id="tabs"></div>
 
@@ -322,11 +350,13 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <div class="big num" id="closedPL"></div>
     <p>You now have <b class="num" id="closedWorth"></b></p>
     <p id="closedGoal"></p>
+    <div class="racebox" id="closedRace" hidden></div>
     <div class="stats num" id="closedStats"></div>
     <p class="habit" id="closedHabit"></p>
     <p class="tipline" id="closedTip"></p>
     <div class="fact" id="closedFact"></div>
     <div class="rank" id="closedRank"></div>
+    <p class="newb" id="closedBadges" hidden></p>
     <p class="fine" id="closedNote"></p>
     <button class="go" id="nextDay">Next day</button>
   </div>
@@ -366,6 +396,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
       <input type="checkbox" id="optSound" role="switch">
     </label>
     <button class="setting" id="openSchool" style="width:100%;border:0;color:inherit"><span>&#128216; Trading School<small id="schoolSum"></small></span></button>
+    <button class="setting" id="openBadges" style="width:100%;border:0;color:inherit"><span>&#127941; Badges<small id="badgeSumS"></small></span></button>
     <button class="go" id="settingsDone">Done</button>
     <button class="ghost" id="restart">Start over with $10,000</button>
   </div>
@@ -417,6 +448,27 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
   </div>
 </div>
 
+<div class="scrim" id="race" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="raceT">
+    <div class="lbl" id="raceN">Daily race</div>
+    <h2 id="raceT">&#127937; Today's race</h2>
+    <p class="fine">Three rival traders trade the same Tiny Market as you, 10 shares at a time. Whoever has made the most money at 4:00 wins the day.</p>
+    <div class="board" id="raceBoard"></div>
+    <p class="fine" id="raceSeason"></p>
+    <button class="go" id="raceDone">Back to trading</button>
+  </div>
+</div>
+
+<div class="scrim" id="badges" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="badgesT">
+    <h2 id="badgesT">&#127941; Badges</h2>
+    <p id="badgeSum"></p>
+    <div class="bgrid" id="badgeGrid"></div>
+    <button class="go" id="badgesDone">Done</button>
+  </div>
+</div>
+
+<div class="medal" id="medal" role="status" aria-live="polite"><span class="mi" id="medalI"></span><div><small>NEW BADGE</small><b id="medalT"></b><span class="d" id="medalD"></span></div></div>
 <div class="toast" id="toast"></div>
 <div class="edge" id="edge"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -475,7 +527,8 @@ const clockStr=m=>{const t=570+m,h=Math.floor(t/60),mm=t%60,h12=((h+11)%12)+1;re
    games.simple / games.pro: each mode has its own money.
    s.hold: {TICKER: {sh, cost, at, bad, good, stop}}. Simple mode holds at most one company, 10 shares at a time. */
 let games={simple:null,pro:null}, mode="simple", s=null, best={simple:null,pro:null}, seenIntro=false, seenPro=false, opts={explain:true,sound:true,speed:1,chart:"line"};
-let school={n:0,seen:-1};   // Trading School: n = lessons finished, seen = last lesson card shown (its tool is on the chart from then on)
+let school={n:0,seen:-1};
+let badges={}, play={last:"",run:0}, newToday=[];   // badges earned (shared by both modes), real-day play streak, badges earned today   // Trading School: n = lessons finished, seen = last lesson card shown (its tool is on the chart from then on)
 const isPro=()=>mode==="pro";
 const list=()=>modeList(mode);
 
@@ -513,7 +566,7 @@ function openMarket(){
   }
   if(!M.st.TINY||!M.st.TINY.c.length) buildIndex(); else for(const c of M.st.TINY.c) c.y=1;
   M.st.TINY.a0=avgNow(); M.st.TINY.p=M.st.TINY.open=idxNow(); M.st.TINY.mom=0;
-  M.gapNext=true; M.lastNews=null;
+  M.gapNext=true; M.lastNews=null; rivalsInit();
 }
 function newGame(m){
   if(!M) newMarket();
@@ -528,7 +581,7 @@ const price=t=>M.st[t].p;
 const owned=()=>Object.keys(s.hold);
 
 function load(){
-  const common=d=>{ mode=d.mode||"simple"; best=d.best||best; seenIntro=!!d.seenIntro; seenPro=!!d.seenPro; if(d.opts) opts=Object.assign(opts,d.opts); if(d.school) school=d.school; };
+  const common=d=>{ mode=d.mode||"simple"; best=d.best||best; seenIntro=!!d.seenIntro; seenPro=!!d.seenPro; if(d.opts) opts=Object.assign(opts,d.opts); if(d.school) school=d.school; if(d.badges) badges=d.badges; if(d.play) play=d.play; };
   try{
     const d=JSON.parse(localStorage.getItem(KEY)||"null");
     if(d&&d.market){ M=d.market; games=d.games||games; common(d); }
@@ -568,7 +621,7 @@ function joinMarkets(){
     if(g!==main) g.dayStart=worthOf(g);
   }
 }
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({market:M,games,mode,best,seenIntro,seenPro,opts,school}));}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({market:M,games,mode,best,seenIntro,seenPro,opts,school,badges,play}));}catch(e){}}
 
 /* ---------- daily goals, stars, ranks, streaks ---------- */
 const RANKS=[[0,"Rookie"],[3,"Trader"],[8,"Hot Shot"],[15,"Shark"],[25,"Big Bull"],[40,"Legend"]];
@@ -745,6 +798,7 @@ function quizNext(){
   if(quizAt.k<Q.length){ quizQuestion(); return; }
   const perfect=quizAt.miss===0, g=games.simple; quizAt.done=true;
   if(perfect&&g){ g.stars++; render(); confetti(80); sfx("goal"); }
+  if(perfect) earn("quiz"); if(school.n>=LESSONS.length) earn("grad");
   $("quizT").textContent=perfect?"Perfect!":"Quiz done!";
   $("quizBody").innerHTML=`<div class="score">${perfect?"2 of 2":"Done"}</div><p>${perfect?"You got every question right the first time. +1 &#11088; bonus star!":"You found every right answer. Mistakes are how traders learn!"}</p>`;
   $("quizGo").disabled=false; $("quizGo").textContent=school.n>=LESSONS.length?"Finish Trading School":"Next lesson";
@@ -757,7 +811,9 @@ function renderGoal(){
   const pt=o.done?"":goalProgText(s);
   $("goalTxt").innerHTML=(o.done?"Goal done! &#11088;":goalText(s))+(pt?`<small>${pt}</small>`:"");
   $("goalBar").style.width=(o.done?100:Math.max(0,Math.min(1,o.prog/o.n))*100)+"%";
-  $("stars").textContent="\u2B50 "+s.stars;
+  $("stars").textContent="\u2B50 "+s.stars; if(s.stars>=10) earn("stars10");
+  const rc=$("raceChip"), ro=!isPro()&&raceUnlocked(); rc.hidden=!ro;
+  if(ro){ const pl=placeOf(); rc.innerHTML=pl<=3?`${MEDAL[pl-1]}<span class="ord">${ORD[pl-1]}</span>`:ORD[pl-1]; rc.classList.toggle("spot",!opts.seenRace); rc.setAttribute("aria-label",`Daily race: you are ${ORD[pl-1]}`); }
   $("streak").hidden=s.streak<2; $("streak").textContent="\uD83D\uDD25"+s.streak;
 }
 
@@ -804,8 +860,10 @@ function tick(){
     M.newsBig=big; M.newsS=M.news; M.newsSBig=big;   // every headline moves the Tiny Market a little
     newsArrived(target&&target.t);
   }
+  rivalsTick();
   checkStops();
   goalUpdate();
+  raceWatch();
   if(M.min===MINS-15){ toast(isPro()?"15 minutes until 4:00!":"15 minutes left! We sell for you at 4:00"); sfx("warn"); buzz([30,60,30]); }
   if(M.min%CANDLE===0) persist();
   if(M.min>=MINS) closeMarket();
@@ -835,6 +893,111 @@ function ind(t){
 }
 const recentNews=()=>M.lastNews&&M.phase==="open"&&M.min-M.lastNews.min<=5?M.lastNews:null;
 
+/* ---------- the daily race: three rival traders with different styles trade the Tiny Market, 10 shares at a time ---------- */
+const RIVALS=[
+  {id:"tina",n:"Trend Tina",av:"🏄",how:"Tina buys when the price is above the purple line (an uptrend) and sells when it drops under it.",win:"Following the trend worked today."},
+  {id:"bob",n:"Bargain Bob",av:"🛒",how:"Bob buys near the green floor, when the price is low, and sells near the red ceiling. If it drops 1.5%, he sells early.",win:"Buying low and selling high worked today."},
+  {id:"jay",n:"Jumpy Jay",av:"🐿️",how:"Jay buys on a hunch all day. He sells winners too early and holds losers too long.",win:"Jay got lucky. Guessing can win one day, but it usually doesn't last."},
+];
+const ORD=["1st","2nd","3rd","4th"], MEDAL=["🥇","🥈","🥉","4."];
+const raceUnlocked=()=>!!games.simple&&school.n>=1;   // the race starts after Trading School lesson 1
+function rivalsInit(){ M.rv={}; for(const r of RIVALS) M.rv[r.id]={pl:0,h:null,n:0}; }
+function rivalSell(o,p){ o.pl=r2(o.pl+(p-o.h.cost)*SIMPLE_QTY); o.h=null; o.n++; }
+function rivalsTick(){
+  if(!M.rv) rivalsInit();
+  const k=ind(IDX.t), p=price(IDX.t); if(!k) return;
+  for(const r of RIVALS){
+    const o=M.rv[r.id]||(M.rv[r.id]={pl:0,h:null,n:0}), h=o.h, age=h?M.min-h.at:0, up=h?p/h.cost-1:0;
+    if(r.id==="tina"){ if(!h){ if(k.above&&M.min>=5&&Math.random()<.5) o.h={cost:p,at:M.min}; } else if(age>=3&&(!k.above||up<-.02)) rivalSell(o,p); }
+    else if(r.id==="bob"){ if(!h){ if(k.nearSup&&!k.broke) o.h={cost:p,at:M.min}; } else if(age>=2&&(k.nearRes||up>=.025||up<=-.015)) rivalSell(o,p); }
+    else { if(!h){ if(Math.random()<.15) o.h={cost:p,at:M.min}; } else if(up>.002||up<-.006||Math.random()<.08) rivalSell(o,p); }
+  }
+}
+function rivalsClose(){ if(!M.rv) return; const p=price(IDX.t); for(const r of RIVALS){ const o=M.rv[r.id]; if(o&&o.h) rivalSell(o,p); } }
+const rivalNow=o=>o.pl+(o.h?(price(IDX.t)-o.h.cost)*SIMPLE_QTY:0);
+// everyone's money made today, best first (you win ties)
+function raceBoard(){
+  const g=games.simple; if(!M.rv) rivalsInit();
+  const b=[{id:"you",v:g?worthOf(g)-g.dayStart:0},...RIVALS.map(r=>({id:r.id,v:rivalNow(M.rv[r.id])}))];
+  return b.sort((a,c)=>c.v-a.v>0.004?1:a.v-c.v>0.004?-1:(a.id==="you"?-1:c.id==="you"?1:0));
+}
+const placeOf=()=>raceBoard().findIndex(x=>x.id==="you")+1;
+const rivalOf=id=>RIVALS.find(r=>r.id===id);
+const nameOf=id=>id==="you"?"You":rivalOf(id).n;
+let lastPlace=0, placeToastAt=-99;
+function raceWatch(){
+  if(isPro()||!raceUnlocked()||s!==games.simple||M.min<20) return;
+  const pl=placeOf();
+  if(lastPlace&&pl!==lastPlace&&M.min-placeToastAt>=8){
+    if(pl===1){ toast("🥇 You took 1st place in the race!"); sfx("alert"); placeToastAt=M.min; }
+    else if(lastPlace===1){ toast(`${nameOf(raceBoard()[0].id)} passed you! You're ${ORD[pl-1]} now`); placeToastAt=M.min; }
+  }
+  lastPlace=pl;
+}
+function showRace(){
+  opts.seenRace=true; persist();
+  const box=$("raceBoard"); box.innerHTML="";
+  raceBoard().forEach((x,i)=>{
+    const r=x.id==="you"?null:rivalOf(x.id), o=r&&M.rv[r.id], d=document.createElement("div");
+    d.className="rw"+(r?"":" you");
+    const st=r?(o.h?`Holding now. ${o.n} trade${o.n===1?"":"s"} done.`:`Waiting. ${o.n} trade${o.n===1?"":"s"} done.`):"That's you!";
+    d.innerHTML=`<span class="pos">${MEDAL[i]}</span><span class="av" aria-hidden="true">${r?r.av:"😎"}</span><span class="nm">${nameOf(x.id)}<small>${r?r.how+" "+st:st}</small></span><span class="v num ${cls(x.v)}">${signed(x.v)}</span>`;
+    box.append(d);
+  });
+  const R=games.simple&&games.simple.race;
+  $("raceSeason").textContent=R?"Days won so far: "+["you",...RIVALS.map(r=>r.id)].map(id=>`${nameOf(id)} ${R[id]||0}`).join(" · "):"Win today to start your record!";
+  holdOn(); $("race").hidden=false;
+}
+
+/* ---------- badges ---------- */
+const BADGES=[
+  ["first","🎉","First win","Win your first trade"],
+  ["hot3","🔥","Hot hand","Win 3 trades in a row"],
+  ["hot5","☄️","On fire","Win 5 trades in a row"],
+  ["big","💰","Big win","Make $25 on one trade ($250 in Pro)"],
+  ["calm","🧘","Patient","Win a trade you held 30+ minutes"],
+  ["plan","🎯","Planner","A take-profit sells for a win"],
+  ["safe","🛡️","Safety first","A stop-loss keeps a loss small"],
+  ["green","📗","Green day","End a day with more money"],
+  ["green3","🌳","Steady grower","3 green days in a row"],
+  ["race","🥇","Race winner","Finish 1st in the daily race"],
+  ["race5","🏆","Champion","Win the daily race 5 times"],
+  ["quiz","🧠","Sharp mind","Get a quiz perfect"],
+  ["grad","🎓","Graduate","Finish Trading School"],
+  ["stars10","⭐","Star collector","Earn 10 stars"],
+  ["daily3","📅","Regular","Play 3 days in a row"],
+  ["daily7","🗓️","Every day","Play 7 days in a row"],
+  ["pro","🟣","Going pro","Make a trade in Pro mode"],
+];
+const badgeCount=()=>BADGES.filter(b=>badges[b[0]]).length;
+let medalQ=[], medalOn=false;
+function earn(id){
+  if(badges[id]) return; const b=BADGES.find(x=>x[0]===id); if(!b) return;
+  badges[id]=1; newToday.push(id); persist(); medalQ.push(b); nextMedal();
+}
+function nextMedal(){
+  if(medalOn||!medalQ.length) return; const b=medalQ.shift(); medalOn=true;
+  $("medalI").textContent=b[1]; $("medalT").textContent=b[2]; $("medalD").textContent=b[3];
+  $("medal").classList.add("show"); sfx("badge"); buzz([20,30,20]);
+  setTimeout(()=>{ $("medal").classList.remove("show"); setTimeout(()=>{ medalOn=false; nextMedal(); },450); },2600);
+}
+function showBadges(){
+  const box=$("badgeGrid"); box.innerHTML="";
+  for(const [id,ic,name,how] of BADGES){ const d=document.createElement("div"); d.className=badges[id]?"got":"no"; d.innerHTML=`<span class="bi" aria-hidden="true">${ic}</span>${name}<small>${how}</small>`; box.append(d); }
+  const n=badgeCount();
+  $("badgeSum").textContent=`${n} of ${BADGES.length} collected.`+(play.run>=2?` 📅 ${play.run}-day streak!`:"")+(n<BADGES.length?" Gray ones are still locked.":" You got them all!");
+  holdOn(); $("badges").hidden=false;
+}
+// real-life days in a row that the game was opened
+const dstr=d=>`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+function dailyCheck(now){
+  now=now||new Date(); const t=dstr(now), y=dstr(new Date(now.getTime()-864e5));
+  if(play.last===t) return false;
+  play.run=play.last===y?(play.run||0)+1:1; play.last=t; persist();
+  if(play.run>=3) earn("daily3"); if(play.run>=7) earn("daily7");
+  return play.run>=2;
+}
+
 /* ---------- trading ---------- */
 let qtyMode="10";
 function buyShares(t,q){
@@ -845,6 +1008,7 @@ function buyShares(t,q){
   h.cost=(h.cost*h.sh+q*p)/(h.sh+q); h.sh+=q; h.at=M.min; s.cash=r2(s.cash-q*p);
   const k=ind(t), rn=recentNews(); h.above=!!(k&&k.above); h.nearSup=!!(k&&k.nearSup); h.nearRes=!!(k&&k.nearRes); h.afterGood=!!(rn&&rn.good); h.afterBad=!!(rn&&!rn.good);
   if(!isPro()&&known("exits")){ h.stop=2; h.tp=3; }
+  if(isPro()) earn("pro");
   persist(); toast(`Bought ${q} ${byT[t].n} at ${money(p)}`); buzz(15); sfx("buy"); goalUpdate({buy:true}); render();
 }
 // g is the game whose shares are sold (default: the mode on screen). A game can only sell its own shares.
@@ -855,6 +1019,9 @@ function sellShares(t,q,auto,g){
   const p=price(t), got=r2(q*p), pl=got-q*h.cost, snap=Object.assign({},h,{t,q});
   h.sh-=q; if(!h.sh) delete g.hold[t]; g.cash=r2(g.cash+got);
   if(pl>0.004){ g.wins=(g.wins||0)+1; g.streak=(g.streak||0)+1; } else if(pl<-0.004) g.streak=0;
+  if(pl>0.004){ earn("first"); if(g.streak>=3) earn("hot3"); if(g.streak>=5) earn("hot5"); if(pl>=(g.mode==="pro"?250:25)) earn("big");
+    if(auto==="target") earn("plan"); if(M.min-(snap.at??M.min)>=30) earn("calm"); }
+  else if(pl<-0.004&&auto==="stop") earn("safe");
   if(me){
     popMoney(pl);
     if(pl>0.004){ sfx("win"); confetti(Math.min(90,20+Math.round(pl/15))); buzz([15,60,15]);
@@ -887,7 +1054,13 @@ function closeMarket(){
   const sg=games.simple;   // Simple mode always ends the day in cash, even if you were playing Pro
   if(sg){ const t=Object.keys(sg.hold)[0]; if(t){ if(sg===s) auto=byT[t].n; sellShares(t,sg.hold[t].sh,"close",sg); } goalUpdate({close:true},sg); }
   for(const t in M.st){ const c=M.st[t].c; c[c.length-1].y=1; }
-  for(const m in games){ const g=games[m]; if(!g) continue; const w=worthOf(g); if(best[m]===null||w>best[m]) best[m]=w; }
+  for(const m in games){ const g=games[m]; if(!g) continue; const w=worthOf(g); if(best[m]===null||w>best[m]) best[m]=w;
+    const up=w>g.dayStart+0.004; g.greenRun=up?(g.greenRun||0)+1:0; if(up){ earn("green"); if(g.greenRun>=3) earn("green3"); } }
+  rivalsClose();
+  if(sg&&raceUnlocked()){ const b=raceBoard(), pl=b.findIndex(x=>x.id==="you")+1, R=sg.race||(sg.race={});
+    R[b[0].id]=(R[b[0].id]||0)+1; sg.raceLast={day:sg.day,place:pl,board:b.map(x=>({id:x.id,v:r2(x.v)}))};
+    if(pl===1){ earn("race"); if(R.you>=5) earn("race5"); } }
+  else if(sg) sg.raceLast=null;
   persist();
   sfx("bell"); if(worth()>s.dayStart+0.004) setTimeout(()=>confetti(110),300);
   fillClosedCard(isPro()
@@ -936,9 +1109,17 @@ function fillClosedCard(note){
   const i=rankOf(s.stars), nx=RANKS[i+1];
   reportCard(s);
   $("closedRank").innerHTML=`<small>${isPro()?"Pro rank":"Your rank"}</small><b>${RANKS[i][1]}</b>&#11088; ${s.stars} star${s.stars===1?"":"s"}`+
-    (nx?`<small>${nx[0]-s.stars} more to ${nx[1]}</small>`:`<small>Top rank. You're a legend!</small>`);
+    (nx?`<small>${nx[0]-s.stars} more to ${nx[1]}</small>`:`<small>Top rank. You're a legend!</small>`)+
+    `<small>&#127941; ${badgeCount()} of ${BADGES.length} badges`+(play.run>=2?` · &#128197; ${play.run}-day streak`:"")+`</small>`;
+  const L=!isPro()&&s.raceLast&&s.raceLast.day===s.day?s.raceLast:null, rb=$("closedRace"); rb.hidden=!L;
+  if(L){ const top=L.board[0], r=top.id==="you"?null:rivalOf(top.id);
+    rb.innerHTML=`<b class="h">&#127937; TODAY'S RACE: YOU FINISHED ${ORD[L.place-1].toUpperCase()}</b>`+
+      L.board.map((x,j)=>`${MEDAL[j]} ${nameOf(x.id)} <span class="num ${cls(x.v)}">${signed(x.v)}</span>`).join("<br>")+
+      `<br>`+(r?`<b>${r.n} won.</b> ${r.how} ${r.win}`:`<b>You won the race!</b> You beat all three rivals.`); }
+  const nb=newToday.map(id=>BADGES.find(b=>b[0]===id)).filter(Boolean);
+  $("closedBadges").hidden=!nb.length; $("closedBadges").textContent=nb.length?`\uD83C\uDFC5 New badge${nb.length>1?"s":""} today: `+nb.map(b=>b[1]+" "+b[2]).join(", "):"";
 }
-function nextDay(){ openMarket(); for(const m in games){ const g=games[m]; if(g){ g.day++; startGameDay(g); } } persist(); $("closed").hidden=true; render(); draw(true); paused=false; startLoop(); maybeSchool(); }
+function nextDay(){ newToday=[]; lastPlace=0; placeToastAt=-99; openMarket(); for(const m in games){ const g=games[m]; if(g){ g.day++; startGameDay(g); } } persist(); $("closed").hidden=true; render(); draw(true); paused=false; startLoop(); maybeSchool(); }
 
 /* ---------- screen ---------- */
 function newsArrived(t,big){
@@ -1139,7 +1320,7 @@ function draw(snap){
 /* ---------- "why you lost money" card and settings ---------- */
 let afterLesson=null, resumeAfter=false;
 function holdOn(){ if(M.phase==="open"&&!paused){ resumeAfter=true; setPaused(true); } }
-const cardsShut=()=>["lesson","settings","proIntro","school","schoolAll","intro","help","quiz"].every(id=>$(id).hidden);
+const cardsShut=()=>["lesson","settings","proIntro","school","schoolAll","intro","help","quiz","race","badges"].every(id=>$(id).hidden);
 function letGo(){ if(resumeAfter&&cardsShut()){ resumeAfter=false; setPaused(false); } }
 /* ---------- "How it works" guide: what every part of the screen is ---------- */
 const HELP=[
@@ -1153,7 +1334,9 @@ const HELP=[
   ["\uD83D\uDFE2","BUY and SELL",`<p><b class="up">BUY</b> gets you 10 shares at the price right now. A share is a tiny piece of the market.</p><p><b class="down">SELL</b> sells all 10 at the price right now.</p><p>You make or lose the difference, times 10:</p><p class="ex">Buy at $100.00, sell at $103.00<br>$3.00 × 10 shares = <span class="up">+$30.00</span></p>`],
   ["\uD83D\uDFE8","The yellow line",`<p>After you buy, a yellow line shows the price you paid.</p><p>If the price is <b>above</b> the yellow line, selling now makes money. If it's <b>below</b>, selling now loses money.</p>`],
   ["\uD83D\uDD14","4:00 PM: the market closes",`<p>Day traders don't keep shares overnight, because prices can jump while the market is closed.</p><p>So anything you still own at 4:00 is sold for you. Then a report card shows how your day went: your trades, wins and losses, a tip from the coach based on what you did, and a true fact about real stock markets.</p>`],
-  ["\uD83C\uDFAF","Goals, stars, ranks, and streaks",`<p>Each day has one goal at the top. Finish it to earn a \u2B50 star.</p><p>Stars raise your rank: Rookie, Trader, Hot Shot, Shark, Big Bull, and Legend.</p><p>\uD83D\uDD25 counts how many trades in a row you've won. A losing trade resets it.</p>`],
+  ["\uD83C\uDFAF","Goals, stars, ranks, and streaks",`<p>Each day has one goal at the top. Finish it to earn a \u2B50 star.</p><p>Stars raise your rank: Rookie, Trader, Hot Shot, Shark, Big Bull, and Legend.</p><p>\uD83D\uDD25 counts how many trades in a row you've won. A losing trade resets it.</p><p>Tap your \u2B50 stars to see your badges.</p>`],
+  ["\uD83C\uDFC1","The daily race",`<p>After Trading School lesson 1, three rival traders race you every day. They trade the same Tiny Market, 10 shares at a time, and each one has a different style:</p><p>\uD83C\uDFC4 <b>Trend Tina</b> follows the trend (the purple line).<br>\uD83D\uDED2 <b>Bargain Bob</b> buys near the green floor and sells near the red ceiling.<br>\uD83D\uDC3F\uFE0F <b>Jumpy Jay</b> guesses, sells winners too early, and holds losers too long.</p><p>The medal at the top shows your place right now. Tap it to see the board. At 4:00 the report card shows who won and how their style worked.</p><p>Watch which style wins over many days. That's what real traders do when they test a strategy.</p>`],
+  ["\uD83C\uDFC5","Badges and day streak",`<p>Badges are prizes for good trading habits, like using a stop-loss, being patient, or having 3 green days in a row. A banner pops up when you earn one.</p><p>\uD83D\uDCC5 Your day streak counts real days in a row that you played. Come back tomorrow to keep it going!</p>`],
   ["\uD83D\uDCD8","Trading School",`<p>Seven short lessons on real tricks traders use. Each lesson adds a tool to your chart and gives you a task to try it.</p><p>While you work on a task, the blue box under the chart tells you what to do, step by step. Finish the task, then pass a quick 2-question quiz to unlock the next lesson. Get both right the first time for a bonus ⭐.</p><p>Tap the goal bar to read the lesson you're on. <b>Settings › Trading School</b> lists every lesson.</p>`],
   ["\uD83D\uDCAC","The coach line",`<p>The words under the chart tell you what your tools are showing right now, like "Uptrend" or "Near the green floor."</p><p>It's a hint, not a promise. Nobody knows for sure where a price will go next.</p>`],
   ["\u2753","The \"You lost money\" card",`<p>After a sale that loses money, a card shows what you paid, what you sold for, and the most likely reason it went wrong, plus a tip.</p><p>Tap <b>+ Why so much?</b> to see the math. <b>Dismiss</b> turns the cards off. You can turn them back on in Settings.</p>`],
@@ -1228,6 +1411,7 @@ function stateText(){
   lines.push(`Latest news: "${isPro()?M.news:M.newsS}".`);
   if(!isPro()) lines.push(`Trading School: ${school.n} of ${LESSONS.length} lessons done. Tools the player has learned: ${LESSONS.filter(l=>known(l.id)).map(l=>l.title).join(", ")||"none yet"}.`);
   const c=isPro()?"":coach(!!own.length); if(c) lines.push(`Coach line on screen: "${c}".`);
+  if(!isPro()&&raceUnlocked()&&M.rv) lines.push("Daily race right now: "+raceBoard().map((x,i)=>`${ORD[i]} ${nameOf(x.id)} ${signed(x.v)}`).join(", ")+". Rival styles: "+RIVALS.map(r=>r.how).join(" "));
   if(s.goal) lines.push(`Goal: ${goalText(s)}${s.goal.done?" (done)":""}. Stars: ${s.stars}. Rank: ${RANKS[rankOf(s.stars)][1]}.`);
   return lines.join("\n");
 }
@@ -1358,6 +1542,7 @@ function closeLesson(turnOff){
   if(afterLesson){ const f=afterLesson; afterLesson=null; f(); } else letGo();
 }
 function syncSettings(){
+  $("badgeSumS").textContent=`${badgeCount()} of ${BADGES.length} collected`;
   for(const b of document.querySelectorAll("#modeSeg button")) b.classList.toggle("on",b.dataset.m===mode);
   $("modeHelp").textContent=(isPro()?"Six companies, share amounts, stop-loss, and overnight holding.":"One market (the Tiny Market), one big BUY / SELL button, and Trading School.")+" Both modes trade in the same market.";
   $("optExplain").checked=opts.explain; $("optSound").checked=opts.sound;
@@ -1429,6 +1614,7 @@ const SFX={
   warn:()=>{tone(880,0,.12,"square",.05);tone(880,.2,.12,"square",.05);tone(880,.4,.12,"square",.05);},
   goal:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.2,"triangle",.13));},
   rank:()=>{[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*.09,.22,"triangle",.13));},
+  badge:()=>{[1319,1568,2093,2637].forEach((f,i)=>tone(f,i*.07,.2,"triangle",.1));},
   bell:()=>{tone(1047,0,1.1,"sine",.12);tone(1568,0,.8,"sine",.05);tone(1047,.35,1.1,"sine",.1);},
 };
 function sfx(n){ if(!audio()) return; try{SFX[n]();}catch(e){} }
@@ -1478,6 +1664,11 @@ $("restart").onclick=()=>{
   render(); draw(true); paused=false; startLoop(); toast("Fresh start: $10,000");
 };
 $("openSettings").onclick=openSettings;
+$("raceChip").onclick=e=>{ e.stopPropagation(); showRace(); };
+$("stars").onclick=e=>{ e.stopPropagation(); showBadges(); };
+$("raceDone").onclick=()=>{ $("race").hidden=true; render(); letGo(); };
+$("openBadges").onclick=showBadges;
+$("badgesDone").onclick=()=>{ $("badges").hidden=true; letGo(); };
 $("openHelp").onclick=showHelp;
 $("helpDone").onclick=()=>{ if(askCtl) askCtl.abort(); $("help").hidden=true; letGo(); };
 $("askGo").onclick=ask;
@@ -1498,6 +1689,8 @@ window.addEventListener("resize",()=>draw(true));
 // Android Back button: close whatever is open, or pause; returning false lets the app close.
 window.appBack=()=>{
   if(!$("lesson").hidden){closeLesson(false);return true;}
+  if(!$("badges").hidden){$("badgesDone").click();return true;}
+  if(!$("race").hidden){$("raceDone").click();return true;}
   if(!$("help").hidden){$("helpDone").click();return true;}
   if(!$("school").hidden){closeSchool();return true;}
   if(!$("quiz").hidden) return true;   // finish the quiz first
@@ -1512,7 +1705,7 @@ const MK=new Set(["st","min","phase","news","newsBig","used","gapNext"]);
 window.__tt={makeGoal,get s(){return new Proxy(s,{get:(g,k)=>MK.has(k)?M[k]:g[k],set:(g,k,v)=>{(MK.has(k)?M:g)[k]=v;return true;}});},get m(){return M},
   fresh:()=>{newMarket(); games={simple:null,pro:null}; school={n:0,seen:-1}; newGame(mode); lastP=null; buildTabs(); render(); draw(true);},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
   act,buyShares,sellShares,setQty:q=>{qtyMode=String(q);},nextDay,closeMarket,select:t=>{s.sel=t;},setMode,setPaused,stopLoop,draw,render,
-  closeLesson,openSettings,closeSettings,showHelp,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,ind,LESSONS,showSchool,closeSchool,QUIZ,showQuiz,guide,get school(){return school},setSchool:(n,seen)=>{school={n,seen:seen??n};},
+  closeLesson,openSettings,closeSettings,showHelp,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,ind,LESSONS,showSchool,closeSchool,QUIZ,showQuiz,guide,get school(){return school},get rv(){return M.rv},raceBoard,placeOf,showRace,showBadges,earn,get badges(){return badges},get play(){return play},setPlay:v=>{play=v;},dailyCheck,BADGES,setSchool:(n,seen)=>{school={n,seen:seen??n};},
   get own(){const t=Object.keys(s.hold)[0];return t?Object.assign({t},s.hold[t]):null;}};
 
 load(); buildTabs(); render(); draw(true); requestAnimationFrame(frame);
@@ -1523,6 +1716,7 @@ else {
   if(!isPro()&&school.n<LESSONS.length&&school.seen<school.n){ school.seen=school.n; if(LESSONS[school.n].id==="candles") opts.chart="candle"; persist(); setTimeout(()=>toast("New lesson! Tap the goal bar to read it."),1800); }
   if(M.phase==="closed"){ nextDay(); toast(`Day ${s.day}: the market is open!`); } else setPaused(false);
 }
+if(dailyCheck()&&seenIntro) setTimeout(()=>toast(`\uD83D\uDCC5 ${play.run} days in a row! Come back tomorrow to keep it up`),3600);
 })();
 </script>
 

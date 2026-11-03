@@ -22,6 +22,8 @@ Watch the live price line go up and down. Tap BUY when you think the price will 
 • Funny news headlines that make prices jump or crash
 • Lose money? A simple tip explains why and how to do better (you can turn tips off in Settings)
 • A new goal every day: finish it to earn stars and rank up from Rookie to Legend
+• Race three rival traders every day: Trend Tina, Bargain Bob, and Jumpy Jay each trade a different way, and the report card shows whose style won
+• Collect 17 badges for good habits like using a stop-loss, being patient, and green days in a row, and keep your daily play streak going
 • Win streaks, confetti, sound effects, and BREAKING news
 • Each trading day takes about six minutes, or speed it up to 2x or 3x
 • Ready for more? Pro mode adds six companies, share amounts, owning several at once, stop-loss, and overnight holding, in the same market with the same prices

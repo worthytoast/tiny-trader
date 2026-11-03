@@ -142,3 +142,33 @@ console.log("lesson 1 guides you step by step:",/Step 1/.test(T.guide().text)&&T
 win(); console.log("passing lesson 1 queues its quiz:",T.school.qp===0);
 while(T.s.phase==="open") T.tick();
 console.log("report card counts the day's trades:",/TRADES<b>1</.test($("closedStats").innerHTML)&&/Coach's tip/.test($("closedTip").innerHTML)&&/DID YOU KNOW/.test($("closedFact").innerHTML));
+
+// ---- engagement: daily race with rival traders, badges, day streak
+T.setMode("simple"); T.fresh(); T.setSchool(1,1); T.s.goal=null; T.makeGoal(T.s);
+{ const trades={tina:0,bob:0,jay:0}, wins={you:0,tina:0,bob:0,jay:0}, tot={tina:0,bob:0,jay:0}; let shutOk=true, sorted=true;
+  for(let d=0;d<150;d++){
+    while(T.s.phase==="open"){ T.tick(); if(T.s.min%50===0){ const b=T.raceBoard(); for(let i=1;i<b.length;i++) if(b[i].v>b[i-1].v+0.005) sorted=false; } }
+    for(const id in trades){ trades[id]+=T.rv[id].n; tot[id]+=T.rv[id].pl; if(T.rv[id].h) shutOk=false; }
+    const L=T.s.raceLast; if(L) wins[L.board[0].id]++;
+    T.nextDay();
+  }
+  console.log("rivals trade every day (avg trades/day):",Object.entries(trades).map(([k,v])=>k+" "+(v/150).toFixed(1)).join(", "),Object.values(trades).every(v=>v>150));
+  console.log("rivals end the day in cash:",shutOk,"| race board is sorted best first:",sorted);
+  console.log("days won over 150 (you sit out):",JSON.stringify(wins),"| rival total $:",Object.entries(tot).map(([k,v])=>k+" "+v.toFixed(0)).join(", "));
+  console.log("every rival wins some days:",wins.tina>8&&wins.bob>8&&wins.jay>8);
+  console.log("race record kept:",T.s.race&&Object.values(T.s.race).reduce((a,b)=>a+b,0)===150);
+}
+T.fresh(); T.setSchool(0,0); while(T.s.phase==="open") T.tick(); console.log("no race before lesson 1:",T.s.raceLast===null&&$("closedRace").hidden); T.nextDay();
+T.setSchool(1,1); for(const k in T.badges) delete T.badges[k]; T.s.cash+=500; while(T.s.phase==="open") T.tick();
+console.log("a big day wins the race and shows on the report card:",T.s.raceLast.place===1&&!$("closedRace").hidden&&/YOU FINISHED 1ST/.test($("closedRace").innerHTML)&&!!T.badges.race);
+console.log("green day badge:",!!T.badges.green,"| new badges listed on the card:",/New badge/.test($("closedBadges").textContent));
+T.nextDay(); T.act(); for(const x of T.ALL) T.s.st[x.t].p=Math.round(T.s.st[x.t].p*1.05*100)/100; T.tick(); T.act();
+console.log("first win badge:",!!T.badges.first);
+{ const n0=Object.keys(T.badges).length; T.earn("first"); console.log("a badge is only earned once:",Object.keys(T.badges).length===n0); }
+T.setPlay({last:"",run:0}); const day0=new Date(2026,10,1,12);
+T.dailyCheck(day0); T.dailyCheck(new Date(2026,10,2,12)); const same=T.dailyCheck(new Date(2026,10,2,20)); T.dailyCheck(new Date(2026,10,3,9));
+console.log("day streak counts real days in a row:",T.play.run===3&&same===false&&!!T.badges.daily3);
+T.dailyCheck(new Date(2026,10,6,9)); console.log("missing a day resets the streak:",T.play.run===1);
+T.showBadges(); console.log("badge screen lists all",T.BADGES.length,"badges:",/collected/.test($("badgeSum").textContent));
+T.showRace(); console.log("race card opens:",!$("race").hidden);
+

@@ -150,6 +150,35 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); while(T.s.phase==="open") T.tick();}); await wait(200);
   check("day-end card shows the goal and a rank",await p.evaluate(()=>/Goal (done|missed)/.test(document.getElementById("closedGoal").textContent)&&/Rookie|Trader|Hot Shot|Shark|Big Bull|Legend/.test(document.getElementById("closedRank").textContent)));
   console.log("   rank box:",await p.evaluate(()=>document.getElementById("closedRank").textContent));
+  // ---- engagement: daily race, badges, day streak
+  await p.click("#nextDay"); await wait(300);
+  check("race medal shows at the top after lesson 1",await p.evaluate(()=>!document.getElementById("raceChip").hidden&&/(1st|2nd|3rd|4th)/.test(document.getElementById("raceChip").textContent)));
+  await p.click("#raceChip"); await wait(200);
+  check("tapping the medal opens the race board and pauses",(await vis("race"))&&await p.evaluate(()=>window.__tt.isPaused()&&document.querySelectorAll("#raceBoard .rw").length===4&&!!document.querySelector("#raceBoard .rw.you")));
+  await p.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+"/race.png":"race_test.png"});
+  await p.click("#raceDone"); await wait(150);
+  check("closing the race board resumes",!(await vis("race"))&&await p.evaluate(()=>!window.__tt.isPaused()));
+  check("the goal bar does not open a lesson when the medal is tapped",!(await vis("school")));
+  await p.evaluate(()=>{ for(const k in window.__tt.badges) delete window.__tt.badges[k]; window.__tt.earn("hot3"); });
+  for(let i=0;i<60&&!(await p.evaluate(()=>document.getElementById("medal").classList.contains("show")&&document.getElementById("medalT").textContent==="Hot hand"));i++) await wait(250);
+  await wait(400);
+  check("earning a badge pops up a banner",await p.evaluate(()=>document.getElementById("medal").classList.contains("show")&&document.getElementById("medalT").textContent==="Hot hand"));
+  await p.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+"/medal.png":"medal_test.png"});
+  await p.click("#stars"); await wait(200);
+  check("tapping the stars opens the badge collection",(await vis("badges"))&&await p.evaluate(()=>document.querySelectorAll("#badgeGrid .got").length===1&&document.querySelectorAll("#badgeGrid .no").length===16));
+  await p.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+"/badges.png":"badges_test.png"});
+  await p.click("#badgesDone"); await wait(150);
+  await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); while(T.s.phase==="open") T.tick();}); await wait(300);
+  check("report card shows the race result and new badges",await p.evaluate(()=>!document.getElementById("closedRace").hidden&&/TODAY'S RACE/.test(document.getElementById("closedRace").textContent)&&/Hot hand/.test(document.getElementById("closedBadges").textContent)));
+  await p.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+"/raceday.png":"raceday_test.png",fullPage:false});
+  await p.evaluate(()=>document.querySelector("#closed .card").scrollTop=9999); await wait(100);
+  await p.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+"/raceday2.png":"raceday2_test.png"});
+  // a day streak: last played yesterday, open again today
+  { const q=await b.newPage(); q.on("pageerror",e=>errs.push(e.message)); await q.setViewport({width:390,height:844});
+    await q.evaluateOnNewDocument(()=>{ const k="tinytrader.v5"; try{ const d=JSON.parse(localStorage.getItem(k)); if(d&&!window.name){ window.name="x"; const y=new Date(Date.now()-864e5); d.play={last:`${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`,run:2}; localStorage.setItem(k,JSON.stringify(d)); } }catch(e){} });
+    await q.goto(url); await wait(4200);
+    check("playing on a new day grows the day streak and earns Regular",await q.evaluate(()=>window.__tt.play.run===3&&!!window.__tt.badges.daily3));
+    await q.close(); }
   // ---- Ask AI inside claude.ai: a pretend AI stands in for the real "sample" capability
   { const q=await b.newPage(); q.on("pageerror",e=>errs.push(e.message)); await q.setViewport({width:390,height:844});
     await q.evaluateOnNewDocument(()=>{ window.__asked=[]; const fake=async(input,opts)=>{ window.__asked.push(input); await new Promise(r=>setTimeout(r,50)); opts.onText({text:"A stop-loss sells",delta:"A stop-loss sells"}); return {text:"A stop-loss sells for you if the price falls too far.",truncated:false}; };

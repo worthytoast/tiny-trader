@@ -8,6 +8,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{
   const b=await puppeteer.launch({executablePath:"C:/Program Files/Google/Chrome/Application/chrome.exe",headless:true});
   const p=await b.newPage(); await p.setViewport({width:432,height:768,deviceScaleFactor:2.5});
+  await p.evaluateOnNewDocument(()=>document.addEventListener("DOMContentLoaded",()=>{const st=document.createElement("style"); st.textContent="#medal{display:none!important}"; document.head.append(st);}));
   const url="http://127.0.0.1:8800/index.html";
   const tidy=()=>p.evaluate(()=>{document.querySelectorAll(".ping,.flash").forEach(e=>e.classList.remove("ping","flash"));document.getElementById("toast").style.opacity=0;
     const T=window.__tt; T.stopLoop(); T.render(); document.getElementById("pause").textContent="Pause"; T.draw(true);});
@@ -35,7 +36,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
   await wait(300); await p.evaluate(()=>document.getElementById("toast").style.opacity=0); await wait(3500);
   await p.screenshot({path:out+"/5-day-done.png"});
   // Pro mode
-  await p.click("#nextDay"); await wait(150); await p.evaluate(()=>{ if(!document.getElementById("school").hidden) window.__tt.closeSchool(); });
+  await p.click("#nextDay"); await wait(150); await p.evaluate(()=>{ if(!document.getElementById("school").hidden) window.__tt.closeSchool(); for(const id of ["quiz","race","badges","lesson"]) document.getElementById(id).hidden=true; });
   await p.click("#openSettings"); await p.click('#modeSeg button[data-m="pro"]'); await p.click("#settingsDone"); await wait(150); await p.click("#proIntroGo");
   for(let tries=0;tries<60;tries++){
     const ok=await p.evaluate(()=>{const T=window.__tt; T.stopLoop(); T.fresh(); for(let i=0;i<40;i++) T.tick(); document.getElementById("lesson").hidden=true; T.buyShares("ROBO",20); T.buyShares("GLOW",100);
