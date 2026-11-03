@@ -7,12 +7,38 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   const b=await puppeteer.launch({executablePath:"C:/Program Files/Google/Chrome/Application/chrome.exe",headless:true});
   const p=await b.newPage(); const errs=[]; p.on("pageerror",e=>errs.push(e.message));
   await p.setViewport({width:390,height:844});
+  // mv(m): move every price by m (the Tiny Market is built from the six companies, so move them all)
+  await p.evaluateOnNewDocument(()=>{ window.mv=m=>{const T=window.__tt; for(const t in T.s.st){const o=T.s.st[t]; o.p=Math.round(o.p*m*100)/100;}}; });
   const url="http://127.0.0.1:8800/index.html";
   await p.goto(url); await p.evaluate(()=>localStorage.clear()); await p.goto(url); await wait(400);
   await p.click("#introGo"); await wait(300);
   const vis=id=>p.evaluate(id=>!document.getElementById(id).hidden,id);
+  // ---- one market + Trading School
+  check("Simple shows one market chart, no company tabs",await p.evaluate(()=>document.getElementById("tabs").hidden&&document.getElementById("cName").textContent.startsWith("Tiny Market")));
+  check("Trading School lesson 1 opens after the intro",(await vis("school"))&&await p.evaluate(()=>document.getElementById("schoolT").textContent==="Buy low, sell high"));
+  check("the game waits while the lesson is open",await p.evaluate(()=>window.__tt.isPaused()));
+  await p.click("#schoolGo"); await wait(150);
+  check("Let's try it closes the lesson and starts the game",!(await vis("school"))&&await p.evaluate(()=>!window.__tt.isPaused()));
+  check("goal strip shows the lesson task",await p.evaluate(()=>document.getElementById("goalTxt").textContent.startsWith("Lesson 1")));
+  await p.evaluate(()=>{const T=window.__tt; T.act(); mv(1.03);}); await p.click("#act"); await wait(2300);
+  check("winning a trade opens lesson 2",(await vis("school"))&&await p.evaluate(()=>document.getElementById("schoolT").textContent==="Follow the trend"&&window.__tt.school.n===1));
+  await p.click("#schoolGo"); await wait(150);
+  check("goal strip moves on to lesson 2",await p.evaluate(()=>document.getElementById("goalTxt").textContent.startsWith("Lesson 2")));
+  await p.click("#goal"); await wait(150);
+  check("tapping the goal strip reopens the lesson",await vis("school"));
+  await p.click("#schoolGo"); await wait(100);
+  await p.click("#openSettings"); await p.click("#openSchool"); await wait(150);
+  check("Settings has a Trading School list of 7 lessons",(await vis("schoolAll"))&&await p.evaluate(()=>document.querySelectorAll("#lessonList button").length===7&&document.querySelectorAll("#lessonList button:disabled").length===5));
+  await p.click("#lessonList button"); await wait(100);
+  check("an old lesson can be read again",await vis("school"));
+  await p.click("#schoolGo"); await wait(100);
+  check("closing it goes back to the list",await vis("schoolAll"));
+  await p.click("#schoolAllDone"); await p.click("#settingsDone"); await wait(150);
+  // jump to the end of school for the rest of the checks
+  await p.evaluate(()=>{const T=window.__tt; T.setSchool(7,7); T.s.goal=null; T.makeGoal(T.s); T.render();}); await wait(1200);
+  check("after school the chart shows the coach and a Line/Candles button",await p.evaluate(()=>!document.getElementById("ctype").hidden));
   // force a losing trade: buy, then knock the price down 5%
-  const lose=()=>p.evaluate(()=>{const T=window.__tt; if(!T.own) T.act(); const o=T.s.st[T.own.t]; o.p=Math.round(T.own.cost*95)/100;});
+  const lose=()=>p.evaluate(()=>{const T=window.__tt; if(!T.own) T.act(); mv(.95);});
   await lose(); await p.click("#act"); await wait(200);
   check("losing sale shows the card",await vis("lesson"));
   check("game pauses while the card is open",await p.evaluate(()=>window.__tt.isPaused()));
@@ -29,7 +55,7 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   check("Remind me again keeps tips on",await p.evaluate(()=>window.__tt.opts.explain===true));
   check("game resumes after closing",await p.evaluate(()=>!window.__tt.isPaused()));
   // profit: no card
-  await p.evaluate(()=>{const T=window.__tt; T.act(); const o=T.s.st[T.own.t]; o.p=Math.round(T.own.cost*105)/100;}); await p.click("#act"); await wait(150);
+  await p.evaluate(()=>{const T=window.__tt; T.act(); mv(1.05);}); await p.click("#act"); await wait(150);
   check("profitable sale shows no card",!(await vis("lesson")));
   // dismiss turns tips off
   await lose(); await p.click("#act"); await wait(150); await p.click("#lessonDismiss"); await wait(150);
@@ -46,8 +72,8 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   await p.reload(); await wait(400);
   check("setting is remembered after reload",await p.evaluate(()=>window.__tt.opts.explain===true));
   // 4:00 auto-sale at a loss: card first, then the day card
-  await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); T.act(); const t=T.own.t, c=T.own.cost;
-    while(T.s.min<389) T.tick(); T.s.st[t].p=Math.round(c*90)/100; T.tick();});
+  await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); T.s.hold={}; T.act(); T.own&&(T.s.hold.TINY.stop=0,T.s.hold.TINY.tp=0);
+    while(T.s.min<389) T.tick(); const c=T.own.cost; mv(.9*c/T.price("TINY")); T.tick();});
   await wait(200);
   check("auto-sale loss shows the card first",(await vis("lesson"))&&!(await vis("closed")));
   console.log("   reason:",await p.evaluate(()=>document.getElementById("lessonWhy").textContent));
@@ -78,7 +104,7 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   console.log("   reason:",await p.evaluate(()=>document.getElementById("lessonWhy").textContent));
   await p.click("#lessonAgain"); await wait(100);
   await p.click("#openSettings"); await p.click('#modeSeg button[data-m="simple"]'); await p.click("#settingsDone"); await wait(150);
-  check("back in Simple mode with its own money and 3 tabs",await p.evaluate(()=>window.__tt.mode==="simple"&&document.querySelectorAll(".tab").length===3));
+  check("back in Simple mode: one market, no tabs",await p.evaluate(()=>window.__tt.mode==="simple"&&document.getElementById("tabs").hidden));
   await p.reload(); await wait(400);
   check("mode and both games survive a reload",await p.evaluate(()=>{const d=JSON.parse(localStorage.getItem("tinytrader.v5"));return d.mode==="simple"&&d.games.pro&&Object.keys(d.games.pro.hold).length===1;}));
   // ---- stimulation: goal strip, speed, sounds, pop-ups, rank on the day card
@@ -92,7 +118,7 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   check("3x speed runs about three times faster",(m3-m2)>=2*(m1-m0));
   await p.click("#speed"); await wait(100);
   check("speed wraps back to 1x",await p.evaluate(()=>window.__tt.opts.speed===1));
-  await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); if(!T.own) T.act(); const o=T.s.st[T.own.t]; o.p=Math.round(T.own.cost*103)/100;}); await p.click("#act"); await wait(250);
+  await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); if(!T.own) T.act(); mv(1.012);}); await p.click("#act"); await wait(250);
   check("a winning sale floats the money up and counts the streak",await p.evaluate(()=>!!document.querySelector(".pop.up")&&window.__tt.s.streak>=1));
   await p.click("#openSettings"); await wait(100);
   check("Sounds switch starts on",await p.evaluate(()=>document.getElementById("optSound").checked));

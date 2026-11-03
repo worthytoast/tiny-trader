@@ -23,24 +23,25 @@ function day(strategy){
   const r=T.worth()/start-1; T.nextDay(); return r;
 }
 const none=()=>{};
-const holdAll=m=>{ if(m===0){T.select("PZZA");T.act();} };
-const random=()=>{ if(Math.random()<.02){ T.select(T.list()[Math.floor(Math.random()*3)].t); T.act(); } };
+const holdAll=m=>{ if(m===0) T.act(); };
+const random=()=>{ if(Math.random()<.02) T.act(); };
 // buys a stock 2 minutes after its good news and sells 15 minutes later
 let held=null, seen=null;
 const chaser=m=>{ const n=T.s.news;
   if(held&&m-held>=15){(T.own&&T.act());held=null;}
-  if(n!==seen){seen=n; const x=T.list().find(x=>x.good.includes(n)); if(x&&!held){held=-1; setTimeout2(()=>{T.select(x.t);T.act();held=T.s.min;},2);}} };
+  if(n!==seen){seen=n; const x=T.ALL.find(x=>x.good.includes(n)); if(x&&!held){held=-1; setTimeout2(()=>{if(!T.own)T.act();held=T.s.min;},2);}} };
 let pending=[]; function setTimeout2(f,ticks){pending.push({f,at:T.s.min+ticks});}
 const chaserWrap=m=>{ pending=pending.filter(p=>{if(m>=p.at){p.f();return false;}return true;}); chaser(m); };
 const stats=(name,f,n)=>{T.newGame(); const r=[]; for(let i=0;i<n;i++){held=null;pending=[];r.push(day(f));} r.sort((a,b)=>a-b);
   console.log(name.padEnd(14),"worst day",(r[0]*100).toFixed(0)+"%","median",(r[n>>1]*100).toFixed(1)+"%","best",(r[n-1]*100).toFixed(0)+"%");};
 T.newGame(); while(T.s.phase==="open") T.tick(); console.log("day-end card shown:",!$("closed").hidden,"text:",$("closedT").textContent,"|",$("closedGoal").innerHTML.replace(/&#\d+;/g,"*")); T.nextDay();
-stats("cash only",none,20); stats("hold Pizza",holdAll,300); stats("random taps",random,300); stats("news chaser",chaserWrap,300);
+stats("cash only",none,20); stats("hold all day",holdAll,300); stats("random taps",random,300); stats("news chaser",chaserWrap,300);
 // rule checks
-T.newGame(); T.select("PZZA"); T.act(); const o=T.own;
+T.newGame(); T.act(); const o=T.own;
+console.log("Simple trades the Tiny Market:",T.list().length===1&&o&&o.t==="TINY");
 console.log("BUY gets exactly 10 shares:",o&&o.sh===10&&Math.abs(T.s.cash-(10000-10*o.cost))<0.01);
-T.select("MOON"); console.log("button says SELL while holding:",document.getElementById("act").className.includes("sell"));
-T.act(); console.log("SELL cashes out everything (even when looking at another company):",!T.own&&Math.abs(T.s.cash-10000)<0.01);
+console.log("button says SELL while holding:",document.getElementById("act").className.includes("sell"));
+T.act(); console.log("SELL sells it all:",!T.own&&Math.abs(T.s.cash-10000)<0.01);
 T.act(); for(let i=0;i<400;i++) T.tick(); console.log("auto-sold at 4:00:",!T.own,"note:",$("closedNote").textContent);
 console.log("save size (bytes):",store["tinytrader.v5"].length);
 
@@ -57,18 +58,19 @@ T.sellShares("GLOW",5,null); console.log("pro partial sell:",T.s.hold.GLOW.sh===
 while(T.s.phase==="open") T.tick(); console.log("pro keeps shares overnight:",Object.keys(T.s.hold).length===2);
 T.nextDay(); T.s.hold.ROBO.stop=5; const c=T.s.hold.ROBO.cost; T.s.st.ROBO.p=Math.round(c*0.94*100)/100; T.tick();
 console.log("stop-loss sells automatically:",!T.s.hold.ROBO);
-T.setMode("simple"); console.log("simple mode money kept separately:",T.list().length===3);
+T.setMode("simple"); console.log("simple mode has one market:",T.list().length===1);
 
 // ---- goals, stars, streaks
 T.newGame(); const st0=T.s.stars; T.s.goal={k:"wins",n:2,prog:0,done:false};
-const win=()=>{ T.select("PZZA"); T.act(); T.s.st.PZZA.p=Math.round(T.own.cost*102)/100; T.act(); };
+const setP=(t,m)=>{T.s.st[t].p=Math.round(T.s.st[t].p*m*100)/100;};
+const win=()=>{ T.act(); setP("TINY",1.02); T.act(); };
 win(); win();
 console.log("two winning trades finish the goal and earn a star:",T.s.goal.done&&T.s.stars===st0+1);
 console.log("streak counts wins in a row:",T.s.streak===2);
-T.select("PZZA"); T.act(); T.s.st.PZZA.p=Math.round(T.own.cost*97)/100; T.act();
+T.act(); setP("TINY",.97); T.act();
 console.log("a losing trade resets the streak:",T.s.streak===0);
-{const g={mode:"simple",dayStart:10000,goal:null}; let ok=true; for(let i=0;i<60;i++){T.makeGoal(g); if(g.goal.k==="profit"&&g.goal.n!==10) ok=false;} console.log("Simple profit goal is $10:",ok);}
-T.s.goal={k:"profit",n:10,prog:0,done:false}; T.select("SLTH"); T.act(); T.s.st.SLTH.p=Math.round(T.own.cost*105)/100; T.tick();
+{const keep=T.school; T.setSchool(7); const g={mode:"simple",dayStart:10000,goal:null}; let ok=true; for(let i=0;i<60;i++){T.makeGoal(g); if(g.goal.k==="profit"&&g.goal.n!==10) ok=false;} console.log("Simple profit goal is $10 (after Trading School):",ok); T.setSchool(keep.n,keep.seen);}
+T.s.goal={k:"profit",n:10,prog:0,done:false}; T.act(); for(const x of T.ALL) setP(x.t,1.05); T.tick();
 console.log("profit goal fills while you hold a winner:",T.s.goal.done);
 console.log("ranks: 0 stars Rookie, 3 Trader, 40 Legend:",T.rankOf(0)===0&&T.rankOf(3)===1&&T.rankOf(40)===5);
 while(T.s.phase==="open") T.tick(); T.nextDay();
@@ -82,17 +84,17 @@ T.setMode("simple"); T.fresh(); for(let i=0;i<20;i++) T.tick();
 const pz=T.price("PZZA"), clock=T.s.min;
 T.setMode("pro");
 console.log("same price for Pizza Rocket in both modes:",T.price("PZZA")===pz,"same clock:",T.s.min===clock);
-T.setMode("simple"); T.select("PZZA"); T.act(); const simpleShares=T.own.sh;
+T.setMode("simple"); T.act(); const simpleShares=T.own.sh;
 T.setMode("pro"); const proCash=T.s.cash;
-console.log("Simple-mode shares are not in Pro:",!T.s.hold.PZZA);
-T.sellShares("PZZA",100,null);
+console.log("Simple-mode shares are not in Pro:",!T.s.hold.TINY);
+T.sellShares("TINY",100,null);
 console.log("so Pro can't sell them:",T.s.cash===proCash);
 for(let i=0;i<30;i++) T.tick();
 T.setMode("simple");
 console.log("Simple still owns them after the market moved:",T.own&&T.own.sh===simpleShares,"clock moved for both:",T.s.min===clock+30);
-// crash Pizza Rocket: the price is the same everywhere, so there's no "doing well" place to sell it
-T.s.st.PZZA.p=Math.round(T.s.st.PZZA.p*70)/100; T.setMode("pro");
-console.log("a crash shows in both modes:",T.price("PZZA")===T.s.st.PZZA.p);
+// crash every company: the Tiny Market is built from them, so it crashes too
+const tinyBefore=T.price("TINY"); for(const x of T.ALL) setP(x.t,.7); T.tick(); T.setMode("pro");
+console.log("a crash in the companies pulls the Tiny Market down:",T.price("TINY")<tinyBefore*.75);
 T.setMode("simple"); const before=T.worth(); T.act();
 console.log("selling after the crash gets the crashed price:",Math.abs(T.s.cash-before)<0.01&&T.s.cash<10000);
 // a Pro stop-loss still works while you play Simple
@@ -100,6 +102,34 @@ T.setMode("pro"); T.buyShares("ROBO",5); T.s.hold.ROBO.stop=3; const rc=T.s.hold
 T.setMode("simple"); T.s.st.ROBO.p=Math.round(rc*90)/100; T.tick(); T.setMode("pro");
 console.log("Pro stop-loss sells while you're in Simple:",!T.s.hold.ROBO);
 // Simple shares are still sold at 4:00 if you're in Pro
-T.setMode("simple"); if(!T.own){T.select("SLTH"); T.act();} T.setMode("pro");
+T.setMode("simple"); if(!T.own) T.act(); T.setMode("pro");
 while(T.s.phase==="open") T.tick(); T.setMode("simple");
 console.log("Simple shares sold at 4:00 even while in Pro:",!T.own);
+
+// ---- Tiny Market = average of the six companies
+T.setMode("simple"); T.fresh(); for(let i=0;i<50;i++) T.tick();
+{ const avg=100*T.ALL.reduce((a,x)=>a+T.price(x.t)/x.p,0)/6; console.log("Tiny Market is the average of the six companies:",Math.abs(avg-T.price("TINY"))<0.02); }
+{ const k=T.ind("TINY"); console.log("chart tools work (average, floor, ceiling):",!!k&&k.sup<=k.res&&k.ma>0); }
+
+// ---- Trading School
+T.fresh(); console.log("starts on lesson 1:",T.school.n===0&&T.s.goal.k==="lesson"&&T.s.goal.i===0);
+T.showSchool(0,true); T.closeSchool();
+win(); console.log("winning a trade passes lesson 1:",T.school.n===1);
+T.s.goal=null; T.makeGoal(T.s); console.log("next goal is lesson 2:",T.s.goal.k==="lesson"&&T.s.goal.i===1);
+T.showSchool(1,true); T.closeSchool();
+// lesson 2: a win only counts if you bought above the purple line
+for(let i=0;i<40;i++) T.tick();
+let tries=0; while(T.school.n===1&&tries++<400){ T.tick(); const k=T.ind("TINY"); if(!T.own&&k&&!k.above){ T.act(); setP("TINY",1.02); T.act(); } }
+console.log("a win bought under the line does not pass lesson 2:",T.school.n===1);
+tries=0; while(T.school.n===1&&tries++<400){ if(T.s.phase!=="open") T.nextDay(); T.tick(); const k=T.ind("TINY"); if(!T.own&&k&&k.above){ T.act(); setP("TINY",1.02); T.act(); } }
+console.log("a win bought above the line passes lesson 2:",T.school.n===2);
+// lesson 4: take-profit and stop-loss lines on every buy
+T.setSchool(3,3); if(T.s.phase!=="open") T.nextDay(); T.s.goal=null; T.makeGoal(T.s);
+T.tick(); T.act(); console.log("buys get a stop-loss and take-profit after lesson 4:",T.own.stop===1&&T.own.tp===1.5);
+for(const x of T.ALL) setP(x.t,1.03); T.tick(); console.log("take-profit sells by itself and passes lesson 4:",!T.own&&T.school.n===4);
+T.setSchool(4,4); T.act(); for(const x of T.ALL) setP(x.t,.97); T.tick(); console.log("stop-loss sells by itself in Simple:",!T.own);
+// lesson 7: finish the day up
+T.setSchool(6,6); T.s.goal=null; T.makeGoal(T.s); T.s.cash+=50; while(T.s.phase==="open") T.tick();
+console.log("ending a day up passes the last lesson:",T.school.n===7);
+T.nextDay(); console.log("after Trading School, normal goals come back:",T.s.goal.k!=="lesson");
+console.log("save size after school (bytes):",store["tinytrader.v5"].length);

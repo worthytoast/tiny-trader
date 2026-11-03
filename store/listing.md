@@ -6,16 +6,17 @@ Copy these into Play Console under **Grow > Store presence > Main store listing*
 Tiny Trader
 
 **Short description** (80 characters max)
-The simplest day-trading game. Watch the live chart, tap BUY, tap SELL.
+Learn how day trading works: live chart, real trader tricks, pretend money.
 
 **Full description**
-Tiny Trader is the simplest day-trading game there is, played with pretend money.
+Tiny Trader is a simple day-trading game that teaches you how the stock market works, played with pretend money.
 
-Watch the live price bars move. Tap BUY when you think the price will go up. Tap SELL to cash out. Sell higher than you bought and you make money!
+Watch the live price line go up and down. Tap BUY when you think the price will go up. Tap SELL to cash out. Sell higher than you bought and you make money!
 
 • One big button: BUY gets 10 shares, SELL sells them
-• Live candlestick chart that moves while you watch
-• Three made-up companies: calm Sloth Mattress, Pizza Rocket, and wild Moon Mining
+• Trade the Tiny Market: six made-up companies rolled into one price, like a real index fund
+• Trading School: 7 short lessons on real techniques (moving averages, support and resistance, take-profit and stop-loss, trading the news, candlesticks, and not betting it all). Each one adds its tool to your chart and gives you a task to practice it
+• A live coach tells you what your chart tools are showing
 • Funny news headlines that make prices jump or crash
 • Lose money? A simple tip explains why and how to do better (you can turn tips off in Settings)
 • A new goal every day: finish it to earn stars and rank up from Rookie to Legend
@@ -36,7 +37,7 @@ Tiny Trader is just a game. The companies, news, and prices are all made up, and
 |---|---|---|
 | App icon | icon-512.png | 512 x 512 PNG |
 | Feature graphic | feature-graphic-1024x500.png | 1024 x 500 |
-| Phone screenshots | screenshots/1-welcome.png to 4-day-done.png | 2 to 8 images, 1080 x 1920 |
+| Phone screenshots | screenshots/1-welcome.png to 6-pro-mode.png | 2 to 8 images, 1080 x 1920 |
 
 ## Answers for the Play Console forms
 

@@ -105,6 +105,23 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .lesson .detail td:last-child{text-align:right}
 .lesson .detail tr.you td{color:var(--hi);font-weight:800}
 .why{color:var(--hi)}
+.school .card{text-align:center}
+.school .pic{background:var(--panel2);border-radius:12px;padding:8px;margin:10px 0}
+.school .pic svg{width:100%;height:auto;display:block}
+.school .pic text{font:800 12px system-ui,sans-serif}
+.school ul.pts{text-align:left;padding-left:20px;margin:8px 0;line-height:1.45;font-size:16px}
+.school ul.pts li{margin:6px 0}
+.school .real{color:var(--soft);font-size:13px;margin:6px 0 10px}
+.school .task{border:1.5px solid var(--hi);background:rgba(255,216,74,.08);border-radius:12px;padding:10px 12px;font-weight:800;font-size:16px;line-height:1.35}
+.school .task small{display:block;color:var(--hi);font-size:11px;letter-spacing:.08em;margin-bottom:2px}
+.lessonlist{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.lessonlist button{display:flex;align-items:center;gap:10px;text-align:left;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:800;font-size:15px}
+.lessonlist button .st{flex:none;width:26px;text-align:center;font-size:17px}
+.lessonlist button.now{border-color:var(--hi)}
+.lessonlist button:disabled{opacity:.45}
+.status small.coach{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.3}
+.ctype{position:absolute;right:10px;bottom:8px;z-index:2;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:4px 10px;font-weight:800;font-size:12px;color:var(--soft)}
+.goal.learn{cursor:pointer}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .btn2{border:0;border-radius:14px;padding:13px 8px;font-family:var(--display);font-size:19px}
 .btn2.dim{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
@@ -182,6 +199,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
   <div class="chartbox">
     <div class="chead"><span class="n" id="cName"></span><span class="pr num" id="cPrice"></span></div>
     <canvas id="chart" aria-label="Live price chart"></canvas>
+    <button class="ctype" id="ctype" hidden>Line</button>
   </div>
 
   <div class="news" id="news"><span class="tag" id="newsTag">NEWS</span><p id="newsTxt">The market is open!</p></div>
@@ -207,12 +225,12 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 <div class="scrim" id="intro" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="introT">
     <h2 id="introT">Tiny Trader</h2>
-    <p>You have <b>$10,000 of pretend money</b>. Each trading day lasts about 6 minutes.</p>
+    <p>You have <b>$10,000 of pretend money</b>. You trade the <b>Tiny Market</b>: one price for six companies together, like a real index fund.</p>
     <ol class="steps">
-      <li>Watch the price bars move.</li>
+      <li>Watch the line go up and down.</li>
       <li>Tap <b class="up">BUY</b> to get 10 shares when you think the price will go up.</li>
-      <li>Tap <b class="down">SELL</b> to sell them. Sell higher than you bought to make money!</li>
-      <li>Finish the daily &#127919; goal to earn &#11088; stars and rank up.</li>
+      <li>Tap <b class="down">SELL</b> to sell them. Sell higher than you paid to make money!</li>
+      <li>&#128216; <b>Trading School</b> teaches you real tricks traders use, one lesson at a time.</li>
     </ol>
     <button class="go" id="introGo">Start trading</button>
     <p class="fine">Want more? Try Pro mode in Settings.<br>Just a game. The companies, news, and prices are made up.</p>
@@ -225,7 +243,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <p>Pro mode has its own <b>$10,000</b> and more tools:</p>
     <ol class="steps" style="font-size:15px">
       <li><b>Six companies</b>, and news that can move the whole market.</li>
-      <li>It's the <b>same market</b> as Simple mode: same prices, same clock. Shares you buy here can only be sold here.</li>
+      <li>It's the <b>same market</b> as Simple mode. Simple trades all six together as the Tiny Market. Here you pick the companies yourself.</li>
       <li>Pick <b>how many shares</b> to buy or sell, and own several companies at once.</li>
       <li><b>Stop-loss</b> sells for you if the price falls too far below what you paid.</li>
       <li>Your shares <b>stay yours overnight</b>. Prices can jump before the next open.</li>
@@ -281,8 +299,30 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
       <span>Sounds<small>Beeps for buying, selling, news, and goals.</small></span>
       <input type="checkbox" id="optSound" role="switch">
     </label>
+    <button class="setting" id="openSchool" style="width:100%;border:0;color:inherit"><span>&#128216; Trading School<small id="schoolSum"></small></span></button>
     <button class="go" id="settingsDone">Done</button>
     <button class="ghost" id="restart">Start over with $10,000</button>
+  </div>
+</div>
+
+<div class="scrim school" id="school" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="schoolT">
+    <div class="lbl" id="schoolN"></div>
+    <h2 id="schoolT"></h2>
+    <div class="pic" id="schoolPic" aria-hidden="true"></div>
+    <ul class="pts" id="schoolBody"></ul>
+    <p class="real" id="schoolReal"></p>
+    <div class="task" id="schoolTask"></div>
+    <button class="go" id="schoolGo">Let's try it</button>
+  </div>
+</div>
+
+<div class="scrim school" id="schoolAll" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="schoolAllT">
+    <h2 id="schoolAllT">&#128216; Trading School</h2>
+    <p id="schoolAllSum"></p>
+    <div class="lessonlist" id="lessonList"></div>
+    <button class="go" id="schoolAllDone">Done</button>
   </div>
 </div>
 
@@ -297,13 +337,13 @@ const $=id=>document.getElementById(id);
 const START=10000, MINS=390, CANDLE=5, TICK_MS=1000, KEEP=110, KEY="tinytrader.v5", KEY4="tinytrader.v4", OLDKEY="tinytrader.v3";
 
 const ALL=[
- {t:"SLTH",n:"Sloth Mattress",p:65,vol:.016,beta:.5,risk:"calm",simple:1,
+ {t:"SLTH",n:"Sloth Mattress",p:65,vol:.016,beta:.5,risk:"calm",
   good:["Sleep doctors recommend Sloth Mattress","Sloth Mattress opens stores in three new countries","Sloth Mattress earns more money than expected","Sloth's new cooling pillow is a hit"],
   bad:["Sloth Mattress delivery trucks run late","Customers say the new Sloth pillow is too fluffy","Sloth Mattress earns less money than expected","A rival mattress company cuts its prices"]},
- {t:"PZZA",n:"Pizza Rocket",p:42,vol:.03,beta:1,risk:"medium",simple:1,
+ {t:"PZZA",n:"Pizza Rocket",p:42,vol:.03,beta:1,risk:"medium",
   good:["Pizza Rocket starts delivering by drone","Pizza Rocket's taco pizza goes viral","Pizza Rocket opens 200 new shops","A famous gamer orders Pizza Rocket live on stream","Pizza Rocket earns more money than expected"],
   bad:["Cheese shortage hits Pizza Rocket","Food critic calls Pizza Rocket \"soggy\"","Pizza Rocket drones drop pizzas on roofs","Pizza Rocket earns less money than expected","Pizza Rocket pulls its pineapple-pickle pizza"]},
- {t:"MOON",n:"Moon Mining",p:12,vol:.06,beta:1.6,risk:"wild",simple:1,
+ {t:"MOON",n:"Moon Mining",p:12,vol:.06,beta:1.6,risk:"wild",
   good:["Moon Mining says it found shiny rocks on the Moon","Moon Mining's rocket launch is a success","A space agency hires Moon Mining","A billionaire buys a big chunk of Moon Mining","Moon Mining's rover sends back amazing photos"],
   bad:["Moon Mining's launch is delayed again","Moon Mining's \"shiny rocks\" were flashlights","Moon Mining is running low on money","Moon Mining's rover gets stuck in a crater","Experts doubt Moon Mining's big plans"]},
  {t:"ROBO",n:"RoboPup",p:118,vol:.04,beta:1.3,risk:"medium",
@@ -316,7 +356,11 @@ const ALL=[
   good:["Pixel Forge's new game hits 10 million players","Pixel Forge wins Game of the Year","Pixel Forge announces the sequel fans wanted","Pixel Forge earns more money than expected","Streamers can't stop playing Pixel Forge's new game"],
   bad:["Pixel Forge delays its big game to next year","Players say Pixel Forge's new game is full of bugs","Pixel Forge's servers crash on launch day","Pixel Forge earns less money than expected","A popular streamer quits Pixel Forge's game"]},
 ];
-const byT=Object.fromEntries(ALL.map(x=>[x.t,x]));
+// Simple mode trades one thing: the Tiny Market, all six companies rolled into one price (like a real index fund).
+const IDX={t:"TINY",n:"Tiny Market",p:100,risk:"calm",index:1};
+const byT=Object.fromEntries(ALL.map(x=>[x.t,x])); byT.TINY=IDX;
+const idxFrom=f=>r2(100*ALL.reduce((a,x)=>a+f(x)/x.p,0)/ALL.length);
+const idxNow=()=>idxFrom(x=>M.st[x.t].p);
 const MKT_GOOD=["Great news for the economy: almost every stock jumps","Shoppers are spending a lot, and the whole market climbs"];
 const MKT_BAD=["Market jitters: almost every stock slips","Economy worries pull the whole market down"];
 
@@ -335,14 +379,24 @@ const clockStr=m=>{const t=570+m,h=Math.floor(t/60),mm=t%60,h12=((h+11)%12)+1;re
 /* ---------- state ----------
    games.simple / games.pro: each mode has its own money.
    s.hold: {TICKER: {sh, cost, at, bad, good, stop}}. Simple mode holds at most one company, 10 shares at a time. */
-let games={simple:null,pro:null}, mode="simple", s=null, best={simple:null,pro:null}, seenIntro=false, seenPro=false, opts={explain:true,sound:true,speed:1};
+let games={simple:null,pro:null}, mode="simple", s=null, best={simple:null,pro:null}, seenIntro=false, seenPro=false, opts={explain:true,sound:true,speed:1,chart:"line"};
+let school={n:0,seen:-1};   // Trading School: n = lessons finished, seen = last lesson card shown (its tool is on the chart from then on)
 const isPro=()=>mode==="pro";
-const list=()=>isPro()?ALL:ALL.filter(x=>x.simple);
+const list=()=>modeList(mode);
 
 /* One shared market, like the real thing: both modes see the same companies at the same prices on the same clock.
    Each mode keeps its own money and shares, so shares bought in one mode can only be sold in that mode. */
 let M=null;
-const modeList=m=>m==="pro"?ALL:ALL.filter(x=>x.simple);
+const modeList=m=>m==="pro"?ALL:[IDX];
+// the Tiny Market's chart is built from the six companies' bars
+function buildIndex(){
+  const n=Math.min(...ALL.map(x=>M.st[x.t].c.length)), c=[];
+  for(let i=0;i<n;i++){
+    const at=x=>{const cs=M.st[x.t].c;return cs[cs.length-n+i];}, f=k=>idxFrom(x=>at(x)[k]), o=f("o"), cl=f("c"), a=at(ALL[0]);
+    c.push({o,c:cl,h:Math.max(o,cl),l:Math.min(o,cl),v:ALL.reduce((v,x)=>v+(at(x).v||0),0),y:a.y,gap:a.gap});
+  }
+  const p=idxNow(); M.st.TINY={p,c,mom:0,open:M.st.TINY?M.st.TINY.open:p};
+}
 function prefill(t){ // a few faded early-morning bars so the chart isn't empty at the open
   const x=byT[t], o=M.st[t]; let p=o.p; const pre=[];
   for(let i=0;i<24;i++){const c={o:p,h:p,l:p,c:p,v:0,y:1};for(let k=0;k<CANDLE;k++){p=step(x,p,0,0);c.h=Math.max(c.h,p);c.l=Math.min(c.l,p);c.c=p;c.v+=vol();}pre.push(c);}
@@ -352,17 +406,19 @@ function prefill(t){ // a few faded early-morning bars so the chart isn't empty 
 function newMarket(){
   M={st:{},used:{}};
   for(const x of ALL) M.st[x.t]={p:x.p,c:[],mom:0,open:x.p};
-  openMarket();
+  delete M.st.TINY; openMarket();
 }
 function openMarket(){
   M.min=0; M.phase="open"; M.news=M.newsS="The market is open!"; M.newsBig=M.newsSBig=false;
-  for(const t in M.st){
-    const x=byT[t], o=M.st[t];
+  for(const x of ALL){
+    const t=x.t, o=M.st[t];
     if(o.c.length){ o.p=r2(Math.max(.5,o.p*Math.exp(gauss()*x.vol*.3))); for(const c of o.c) c.y=1; }   // overnight gap
     else prefill(t);
     o.mom=0; o.open=o.p;
   }
-  M.gapNext=true;
+  if(!M.st.TINY||!M.st.TINY.c.length) buildIndex(); else for(const c of M.st.TINY.c) c.y=1;
+  M.st.TINY.p=M.st.TINY.open=idxNow(); M.st.TINY.mom=0;
+  M.gapNext=true; M.lastNews=null;
 }
 function newGame(m){
   if(!M) newMarket();
@@ -377,7 +433,7 @@ const price=t=>M.st[t].p;
 const owned=()=>Object.keys(s.hold);
 
 function load(){
-  const common=d=>{ mode=d.mode||"simple"; best=d.best||best; seenIntro=!!d.seenIntro; seenPro=!!d.seenPro; if(d.opts) opts=Object.assign(opts,d.opts); };
+  const common=d=>{ mode=d.mode||"simple"; best=d.best||best; seenIntro=!!d.seenIntro; seenPro=!!d.seenPro; if(d.opts) opts=Object.assign(opts,d.opts); if(d.school) school=d.school; };
   try{
     const d=JSON.parse(localStorage.getItem(KEY)||"null");
     if(d&&d.market){ M=d.market; games=d.games||games; common(d); }
@@ -394,6 +450,10 @@ function load(){
     }
   }catch(e){ M=null; games={simple:null,pro:null}; }
   if(!M) newMarket();
+  if(!M.st.TINY) buildIndex();
+  // Simple mode used to trade single companies; it now trades the Tiny Market, so old Simple shares are sold at today's price
+  const sg=games.simple; if(sg) for(const t of Object.keys(sg.hold)) if(t!=="TINY"&&M.st[t]){ sg.cash=r2(sg.cash+sg.hold[t].sh*M.st[t].p); delete sg.hold[t]; }
+  if(sg&&school.n<LESSONS.length&&(!sg.goal||sg.goal.k!=="lesson")) makeGoal(sg);
   if(!games[mode]) newGame(mode);
   s=games[mode];
   for(const m in games){ const g=games[m]; if(!g) continue; g.mode=m; if(!g.goal){ g.wins=g.wins||0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); }
@@ -413,14 +473,65 @@ function joinMarkets(){
     if(g!==main) g.dayStart=worthOf(g);
   }
 }
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({market:M,games,mode,best,seenIntro,seenPro,opts}));}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({market:M,games,mode,best,seenIntro,seenPro,opts,school}));}catch(e){}}
 
 /* ---------- daily goals, stars, ranks, streaks ---------- */
 const RANKS=[[0,"Rookie"],[3,"Trader"],[8,"Hot Shot"],[15,"Shark"],[25,"Big Bull"],[40,"Legend"]];
 const rankOf=n=>{let i=0;while(i+1<RANKS.length&&n>=RANKS[i+1][0])i++;return i;};
+const SV=(inner)=>`<svg viewBox="0 0 300 110" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+const PL=(pts,col,w)=>`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${w||3}" stroke-linejoin="round" stroke-linecap="round"/>`;
+const HL=(y,col,dash)=>`<line x1="8" x2="292" y1="${y}" y2="${y}" stroke="${col}" stroke-width="2" stroke-dasharray="${dash||"6 5"}"/>`;
+const TX=(x,y,t,col,anchor)=>`<text x="${x}" y="${y}" fill="${col}" text-anchor="${anchor||"start"}">${t}</text>`;
+const LESSONS=[
+ {id:"basics",title:"Buy low, sell high",task:"Win a trade",
+  pic:SV(HL(72,"#ffd84a")+PL("10,92 40,82 70,88 100,70 130,72 160,56 190,62 220,42 250,46 290,26","#22d37f")+`<circle cx="130" cy="72" r="6" fill="#22d37f"/><circle cx="250" cy="46" r="6" fill="#ff5a55"/>`+TX(130,95,"BUY","#22d37f","middle")+TX(250,30,"SELL","#ff5a55","middle")+TX(12,66,"you paid","#ffd84a")),
+  pts:["The line is the price. It goes up and down all day.","Buy when you think it will go up. Sell when it's higher than you paid.","The yellow line shows what you paid. Above it, you're winning!"],
+  real:"Real traders call this \"buy low, sell high.\" It sounds easy, but nobody knows for sure where the price goes next."},
+ {id:"trend",title:"Follow the trend",task:"Buy above the purple line, sell for a profit",
+  pic:SV(PL("10,95 30,75 50,88 70,62 90,78 110,55 130,70 150,45 170,60 190,38 210,52 230,30 250,44 270,22 290,34","#22d37f",2.5)+PL("10,88 50,78 90,68 130,60 170,50 210,42 250,35 290,28","#b98cff",4)+TX(292,104,"purple = average","#b98cff","end")),
+  pts:["The new purple line is the average price of the last 30 minutes. It smooths out the wiggles.","Price above the purple line means an uptrend. Below it means a downtrend.","Traders say \"the trend is your friend.\" Buy when the price is above the line."],
+  real:"Real traders call the purple line a moving average. It's one of the most used tools in trading."},
+ {id:"levels",title:"Floors and ceilings",task:"Buy near the green floor, sell for a profit",
+  pic:SV(HL(22,"#ff5a55")+HL(92,"#22d37f")+PL("10,60 40,86 70,40 100,28 130,70 160,88 190,50 220,28 250,64 280,86","#eef2ff",2.5)+TX(292,16,"ceiling","#ff5a55","end")+TX(292,106,"floor","#22d37f","end")),
+  pts:["The green line is the floor: the lowest price of the last hour. The red line is the ceiling: the highest.","Prices often bounce up off the floor and turn down at the ceiling.","Buy near the floor. Sell near the ceiling.","If the price smashes through a line, it often keeps going. That's called a breakout."],
+  real:"Real traders call these support (floor) and resistance (ceiling)."},
+ {id:"exits",title:"Plan your exit",task:"Hit your take-profit line",
+  pic:SV(HL(28,"#22d37f")+HL(62,"#ffd84a","3 4")+HL(86,"#ff5a55")+PL("20,62 60,70 100,56 140,66 180,46 220,42 262,28","#eef2ff",2.5)+`<circle cx="262" cy="28" r="6" fill="#22d37f"/>`+TX(12,22,"take-profit +1.5%","#22d37f")+TX(12,100,"stop-loss −1%","#ff5a55")+TX(292,56,"you paid","#ffd84a","end")),
+  pts:["Pros decide when they'll sell before they buy.","Now every buy gets two lines. Take-profit (green) sells for you when you're up 1.5%. Stop-loss (red) sells if it drops 1%.","Your wins are bigger than your losses, so you can be wrong sometimes and still come out ahead."],
+  real:"Real traders call this risk and reward. Here you risk $1 to try to make $1.50."},
+ {id:"news",title:"News moves prices",task:"Buy right after good news, sell for a profit",
+  pic:SV(PL("10,78 40,74 70,80 100,75 130,77 150,42 180,36 210,44 240,38 290,34","#22d37f")+`<line x1="150" x2="150" y1="20" y2="100" stroke="#ffd84a" stroke-width="2" stroke-dasharray="3 4"/>`+TX(156,22,"Good news!","#ffd84a")),
+  pts:["Good news about a company pushes its price up. Bad news pulls it down.","The Tiny Market is all six companies together, so every headline moves it a little. Big news moves it a lot.","News moves happen fast. Sometimes they keep going, and sometimes they fade back."],
+  real:"Real traders watch the news all day. Buying right after good news is called trading the news."},
+ {id:"candles",title:"Reading candlesticks",task:"Win 2 trades on the candle chart",
+  pic:SV(`<line x1="100" x2="100" y1="14" y2="100" stroke="#22d37f" stroke-width="2"/><rect x="86" y="36" width="28" height="42" fill="#22d37f"/>`+
+    `<line x1="180" x2="180" y1="26" y2="92" stroke="#ff5a55" stroke-width="2"/><rect x="166" y="44" width="28" height="34" fill="#ff5a55"/>`+
+    `<line x1="260" x2="260" y1="18" y2="74" stroke="#22d37f" stroke-width="2"/><rect x="246" y="30" width="28" height="30" fill="#22d37f"/>`+
+    TX(90,18,"highest →","#8c98bd","end")+TX(90,100,"lowest →","#8c98bd","end")+TX(180,106,"went down","#ff5a55","middle")+TX(260,90,"went up","#22d37f","middle")),
+  pts:["Now the chart shows candlesticks. Each candle is 5 minutes.","A green candle means the price went up in those 5 minutes. Red means it went down.","The thin lines (wicks) show the highest and lowest price.","Want the line back? Tap the button on the chart."],
+  real:"Real traders have read candlestick charts for hundreds of years. They started with rice traders in Japan."},
+ {id:"size",title:"Don't bet it all",task:"End a day with more money than you started",
+  pic:SV(`<rect x="10" y="38" width="280" height="30" rx="6" fill="#1d2846" stroke="#2a3658"/><rect x="10" y="38" width="28" height="30" rx="6" fill="#ffd84a"/>`+TX(12,28,"$1,000 in the trade","#ffd84a")+TX(290,88,"$9,000 safe","#8c98bd","end")),
+  pts:["You only buy 10 shares. That's about $1,000 of your $10,000.","Pros never put all their money in one trade. If it goes wrong, they still have plenty left.","Lots of small wins and small losses beat one giant bet."],
+  real:"Real traders call this position sizing. Many only risk a tiny part of their money on each trade."},
+];
+const known=id=>LESSONS.findIndex(l=>l.id===id)<=school.seen;
+const TECH=["trend","levels","exits"];   // after Trading School, daily goals can ask you to use these tools
+function techHit(id,ev,g){
+  const win=ev&&ev.sell&&ev.pl>0.004, h=ev&&ev.h;
+  if(id==="basics"||id==="candles") return win?1:0;
+  if(id==="trend") return win&&h&&h.above?1:0;
+  if(id==="levels") return win&&h&&h.nearSup?1:0;
+  if(id==="exits") return win&&ev.auto==="target"?1:0;
+  if(id==="news") return win&&h&&h.afterGood?1:0;
+  if(id==="size") return ev&&ev.close&&worthOf(g)>g.dayStart+0.004?1:0;
+  return 0;
+}
+const taskOf=id=>LESSONS.find(l=>l.id===id).task;
 function makeGoal(g){
-  const pro=g.mode==="pro", ts=modeList(g.mode).map(x=>x.t), kinds=["profit","profit","wins","stock","quick"];
-  if(pro) kinds.push("spread");
+  const pro=g.mode==="pro";
+  if(!pro&&school.n<LESSONS.length){ const i=school.n; g.goal={k:"lesson",i,n:LESSONS[i].id==="candles"?2:1,prog:0,done:false}; return; }
+  const ts=modeList(g.mode).map(x=>x.t), kinds=pro?["profit","profit","wins","stock","quick","spread"]:["profit","wins","quick",...TECH];
   const k=pick(kinds.filter(x=>x!==(g.goal&&g.goal.k)));
   const goal={k,prog:0,done:false};
   if(k==="profit") goal.n=pro?Math.max(50,Math.round(g.dayStart*.01/50)*50):10;   // Simple trades 10 shares, so $10 is a good day
@@ -432,6 +543,8 @@ function makeGoal(g){
 }
 function goalText(g){
   const o=g.goal; if(!o) return "";
+  if(o.k==="lesson") return `Lesson ${o.i+1}: ${LESSONS[o.i].task}`;
+  if(TECH.includes(o.k)) return taskOf(o.k);
   if(o.k==="profit") return `Make ${fmt0.format(o.n)} today`;
   if(o.k==="wins") return `Win ${o.n} trades today`;
   if(o.k==="stock") return `Win a trade on ${byT[o.t].n}`;
@@ -453,8 +566,12 @@ function goalUpdate(ev,g){
   else if(o.k==="stock"){ if(win&&ev.t===o.t) o.prog=1; }
   else if(o.k==="quick"){ if(win&&ev.held<=5) o.prog=1; }
   else if(o.k==="spread") o.prog=Math.max(o.prog,Object.keys(g.hold).length);
+  else if(o.k==="lesson") o.prog+=techHit(LESSONS[o.i].id,ev,g);
+  else if(TECH.includes(o.k)) o.prog+=techHit(o.k,ev,g);
   if(o.prog>=o.n){
-    o.done=true; const before=rankOf(g.stars); g.stars++; persist();
+    o.done=true; const before=rankOf(g.stars); g.stars++;
+    if(o.k==="lesson"){ school.n=Math.max(school.n,o.i+1); setTimeout(lessonPassed,1700); }
+    persist();
     const up=rankOf(g.stars)>before; if(g!==s) return;
     setTimeout(()=>{
       toast(up?`Rank up: ${RANKS[rankOf(s.stars)][1]}!`:"Goal done! +1 star");
@@ -463,9 +580,18 @@ function goalUpdate(ev,g){
     },ev&&ev.sell?650:0);
   }
 }
+// a lesson's task is done: the next lesson starts right away (or after the day-end card)
+function lessonPassed(){
+  const g=games.simple; if(!g) return;
+  if(school.n>=LESSONS.length){ if(g===s) toast("\uD83C\uDF93 You finished Trading School!"); persist(); return; }
+  if(M.phase==="open"&&g.goal&&g.goal.done&&g.goal.k==="lesson"){ makeGoal(g); persist(); }
+  if(g===s){ render(); maybeSchool(); }
+}
 function renderGoal(){
   const o=s.goal; if(!o) return;
   $("goal").classList.toggle("done",o.done);
+  $("goal").classList.toggle("learn",o.k==="lesson");
+  $("goal").querySelector(".gi").innerHTML=o.k==="lesson"?"&#128216;":"&#127919;";
   const pt=o.done?"":goalProgText(s);
   $("goalTxt").innerHTML=(o.done?"Goal done! &#11088;":goalText(s))+(pt?`<small>${pt}</small>`:"");
   $("goalBar").style.width=(o.done?100:Math.max(0,Math.min(1,o.prog/o.n))*100)+"%";
@@ -497,8 +623,10 @@ function tick(){
     shock=(good?1:-1)*size; M.news=headlineFor(target,good); news=true; big=size>=.06;
     for(const m in games){ const h=games[m]&&games[m].hold[target.t]; if(h) h[good?"good":"bad"]=M.news; }
   }
-  for(const t in M.st){
-    const x=byT[t], o=M.st[t];
+  if(news){ const good=target?shock>0:market>0; M.lastNews={min:M.min,good};
+    for(const m in games){ const h=games[m]&&games[m].hold.TINY; if(h) h[good?"good":"bad"]=M.news; } }
+  for(const x of ALL){
+    const t=x.t, o=M.st[t];
     let jolt=o.mom*.35; o.mom*=.65;
     if(x===target){jolt+=shock*.75; o.mom+=Math.random()<.3?-shock*.3:shock*.25;}   // news hits fast, then drifts on or fades back
     const np=step(x,o.p,market,jolt);
@@ -506,11 +634,13 @@ function tick(){
     if(c.y||(M.min-1)%CANDLE===0){c={o:o.p,h:o.p,l:o.p,c:o.p,v:0}; if(M.gapNext) c.gap=1; o.c.push(c); if(o.c.length>KEEP) o.c.shift();}
     o.p=r2(np); c.h=Math.max(c.h,o.p); c.l=Math.min(c.l,o.p); c.c=o.p; c.v+=vol()*(x===target?6:1);
   }
+  { const o=M.st.TINY, p=idxNow(); let c=o.c[o.c.length-1];
+    if(!c||c.y||(M.min-1)%CANDLE===0){c={o:o.p,h:o.p,l:o.p,c:o.p,v:0}; if(M.gapNext) c.gap=1; o.c.push(c); if(o.c.length>KEEP) o.c.shift();}
+    o.p=p; c.h=Math.max(c.h,p); c.l=Math.min(c.l,p); c.c=p; c.v+=vol()*3; }
   M.gapNext=false;
   if(news){
-    M.newsBig=big;
-    if(!target||target.simple){ M.newsS=M.news; M.newsSBig=big; }   // Simple mode only hears about its three companies and the whole market
-    if(isPro()||!target||target.simple) newsArrived(target&&target.t);
+    M.newsBig=big; M.newsS=M.news; M.newsSBig=big;   // every headline moves the Tiny Market a little
+    newsArrived(target&&target.t);
   }
   checkStops();
   goalUpdate();
@@ -518,18 +648,30 @@ function tick(){
   if(M.min%CANDLE===0) persist();
   if(M.min>=MINS) closeMarket();
 }
-// Stop-loss orders keep working even while you play Simple mode, like a real broker.
+// Stop-loss and take-profit orders keep working even while you play the other mode, like a real broker.
 function checkStops(){
-  const g=games.pro; if(!g) return;
-  for(const t of Object.keys(g.hold)){
-    const h=g.hold[t];
-    if(h&&h.stop&&price(t)<=h.cost*(1-h.stop/100)){
-      toast(g===s?`Stop-loss sold your ${byT[t].n}`:`Pro mode: stop-loss sold your ${byT[t].n}`);
-      sellShares(t,h.sh,"stop",g);
+  for(const m of ["pro","simple"]){ const g=games[m]; if(!g) continue;
+    for(const t of Object.keys(g.hold)){
+      const h=g.hold[t]; if(!h) continue; const p=price(t);
+      const hitS=h.stop&&p<=h.cost*(1-h.stop/100), hitT=h.tp&&p>=h.cost*(1+h.tp/100);
+      if(!hitS&&!hitT) continue;
+      const who=g===s?"":(m==="pro"?"Pro mode: ":"Simple mode: ");
+      toast(who+(hitT?`Take-profit sold your ${byT[t].n}!`:`${who?"stop":"Stop"}-loss sold your ${byT[t].n}`));
+      sellShares(t,h.sh,hitT?"target":"stop",g);
       if(!$("lesson").hidden) return;   // one card at a time
     }
   }
 }
+/* ---------- chart tools that Trading School teaches ----------
+   ma: average price of the last 30 minutes (a moving average). sup / res: lowest and highest price of the hour before (support and resistance). */
+function ind(t){
+  const o=M.st[t], cs=o.c, n=cs.length; if(n<8) return null;
+  const last=cs.slice(-6).map(c=>c.c); last[last.length-1]=o.p; const ma=last.reduce((a,b)=>a+b,0)/last.length;
+  let sup=Infinity,res=-Infinity; for(const c of cs.slice(-13,-1)){sup=Math.min(sup,c.l);res=Math.max(res,c.h);}
+  const p=o.p, rng=Math.max(res-sup,p*.002);
+  return {ma,sup,res,above:p>ma,nearSup:p>=sup&&p-sup<=rng*.25,nearRes:p<=res&&res-p<=rng*.25,broke:p<sup,over:p>res};
+}
+const recentNews=()=>M.lastNews&&M.phase==="open"&&M.min-M.lastNews.min<=5?M.lastNews:null;
 
 /* ---------- trading ---------- */
 let qtyMode="10";
@@ -539,6 +681,8 @@ function buyShares(t,q){
   if(q<1) return toast("Not enough cash");
   const h=s.hold[t]||(s.hold[t]={sh:0,cost:0,at:M.min,stop:0});
   h.cost=(h.cost*h.sh+q*p)/(h.sh+q); h.sh+=q; h.at=M.min; s.cash=r2(s.cash-q*p);
+  const k=ind(t), rn=recentNews(); h.above=!!(k&&k.above); h.nearSup=!!(k&&k.nearSup); h.nearRes=!!(k&&k.nearRes); h.afterGood=!!(rn&&rn.good); h.afterBad=!!(rn&&!rn.good);
+  if(!isPro()&&known("exits")){ h.stop=1; h.tp=1.5; }
   persist(); toast(`Bought ${q} ${byT[t].n} at ${money(p)}`); buzz(15); sfx("buy"); goalUpdate({buy:true}); render();
 }
 // g is the game whose shares are sold (default: the mode on screen). A game can only sell its own shares.
@@ -556,7 +700,7 @@ function sellShares(t,q,auto,g){
     else if(pl<-0.004){ sfx("lose"); hurt(); buzz(60); }
     else sfx("buy");
   }
-  goalUpdate({sell:true,t,pl,held:M.min-(snap.at??M.min)},g);
+  goalUpdate({sell:true,t,pl,held:M.min-(snap.at??M.min),h:snap,auto},g);
   persist();
   if(me){ render(); if(pl<-0.004&&opts.explain) showLesson(snap,p,-pl,auto); }
   return pl;
@@ -566,7 +710,7 @@ const SIMPLE_QTY=10;
 function act(){
   const t=owned()[0];
   if(t) sellShares(t,s.hold[t].sh,null);
-  else buyShares(s.sel,SIMPLE_QTY);
+  else buyShares(IDX.t,SIMPLE_QTY);   // Simple mode only trades the Tiny Market
 }
 const proBuyQty=()=>{const can=Math.floor(s.cash/price(s.sel));return qtyMode==="max"?can:Math.min(+qtyMode,can);};
 const proSellQty=()=>{const own=s.hold[s.sel]?.sh||0;return qtyMode==="max"?own:Math.min(+qtyMode,own);};
@@ -576,14 +720,14 @@ function closeMarket(){
   M.phase="closed"; stopLoop();
   let auto=null;
   const sg=games.simple;   // Simple mode always ends the day in cash, even if you were playing Pro
-  if(sg){ const t=Object.keys(sg.hold)[0]; if(t){ if(sg===s) auto=byT[t].n; sellShares(t,sg.hold[t].sh,"close",sg); } }
+  if(sg){ const t=Object.keys(sg.hold)[0]; if(t){ if(sg===s) auto=byT[t].n; sellShares(t,sg.hold[t].sh,"close",sg); } goalUpdate({close:true},sg); }
   for(const t in M.st){ const c=M.st[t].c; c[c.length-1].y=1; }
   for(const m in games){ const g=games[m]; if(!g) continue; const w=worthOf(g); if(best[m]===null||w>best[m]) best[m]=w; }
   persist();
   sfx("bell"); if(worth()>s.dayStart+0.004) setTimeout(()=>confetti(110),300);
   fillClosedCard(isPro()
     ? (owned().length?"Your shares stay yours overnight. Prices can jump before tomorrow's open.":"Best ever in Pro mode: "+money(best.pro))
-    : (auto?`At 4:00 we sold your ${auto} for you. Day traders always end the day in cash.`:"Best ever: "+money(best.simple)));
+    : (auto?`At 4:00 we sold your ${auto} shares for you. Day traders always end the day in cash.`:"Best ever: "+money(best.simple)));
   render();
   if(!$("lesson").hidden){ resumeAfter=false; afterLesson=()=>{$("closed").hidden=false;}; } else $("closed").hidden=false;
 }
@@ -600,7 +744,7 @@ function fillClosedCard(note){
   $("closedRank").innerHTML=`<small>${isPro()?"Pro rank":"Your rank"}</small><b>${RANKS[i][1]}</b>&#11088; ${s.stars} star${s.stars===1?"":"s"}`+
     (nx?`<small>${nx[0]-s.stars} more to ${nx[1]}</small>`:`<small>Top rank. You're a legend!</small>`);
 }
-function nextDay(){ openMarket(); for(const m in games){ const g=games[m]; if(g){ g.day++; startGameDay(g); } } persist(); $("closed").hidden=true; render(); draw(true); paused=false; startLoop(); }
+function nextDay(){ openMarket(); for(const m in games){ const g=games[m]; if(g){ g.day++; startGameDay(g); } } persist(); $("closed").hidden=true; render(); draw(true); paused=false; startLoop(); maybeSchool(); }
 
 /* ---------- screen ---------- */
 function newsArrived(t,big){
@@ -644,22 +788,36 @@ function render(){
   if(lastSel===s.sel&&lastP!==null&&p!==lastP){ const e=$("cPrice"); e.classList.remove("tu","td"); void e.offsetWidth; e.classList.add(p>lastP?"tu":"td"); }
   lastSel=s.sel; lastP=p;
   renderGoal();
-  $("cName").innerHTML=`${x.n}<small>${x.risk}</small>`;
+  $("cName").innerHTML=x.index?`${x.n}<small>all 6 companies</small>`:`${x.n}<small>${x.risk}</small>`;
   $("cPrice").innerHTML=pro?`${money(p)} <span class="${clsP(ch)}">${pct(ch)}</span>`:money(p);
   const nb=pro?M.newsBig:M.newsSBig; $("newsTxt").textContent=pro?M.news:M.newsS; $("newsTag").textContent=nb?"BREAKING":"NEWS"; $("newsTag").classList.toggle("hot",!!nb);
+  $("tabs").hidden=!pro; $("ctype").hidden=pro||!known("candles"); $("ctype").textContent=opts.chart==="candle"?"Line":"Candles";
   $("act").hidden=pro; $("duo").hidden=!pro; $("qtyRow").hidden=!pro; $("stopRow").hidden=!pro||!s.hold[s.sel];
   if(pro) renderPro(p); else renderSimple(x);
+}
+// the coach: what the tools you've learned are saying right now
+function coach(holding){
+  if(M.phase!=="open") return "";
+  const k=ind(s.sel), rn=known("news")&&recentNews(), L=known("levels"), T=known("trend");
+  if(rn) return rn.good?"\uD83D\uDCF0 Good news just came out. Prices often keep rising for a bit.":"\uD83D\uDCF0 Bad news just came out. Prices often keep falling for a bit.";
+  if(k&&L&&k.over) return "\uD83D\uDE80 Breakout! The price went above the red ceiling.";
+  if(k&&L&&k.broke) return "\u26A0\uFE0F The price fell through the green floor. It may keep falling.";
+  if(k&&L&&holding&&k.nearRes) return "Near the red ceiling. Prices often turn down here. A good spot to sell.";
+  if(k&&L&&!holding&&k.nearSup) return "Near the green floor. Prices often bounce up here.";
+  if(k&&L&&!holding&&k.nearRes) return "Near the red ceiling. Prices often turn down here.";
+  if(k&&T) return k.above?"\uD83D\uDCC8 Uptrend: the price is above the purple line.":"\uD83D\uDCC9 Downtrend: the price is under the purple line. Careful!";
+  return "";
 }
 function renderSimple(x){
   const a=$("act"), t=owned()[0];
   if(t){
-    const h=s.hold[t], pl=h.sh*(price(t)-h.cost);
-    $("status").innerHTML=t===s.sel?`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`
-      :`You own <b>${byT[t].n}</b>, not ${byT[s.sel].n} · <b class="${cls(pl)}">${signed(pl)}</b>`;
+    const h=s.hold[t], pl=h.sh*(price(t)-h.cost), c=coach(true);
+    $("status").innerHTML=`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`+(c?`<small class="coach">${c}</small>`:"");
     a.className="act sell"+(pl>0.004?" glow":""); a.firstChild.nodeValue="SELL";
     $("actTxt").textContent=`Sell ${h.sh} ${byT[t].n} for ${money(h.sh*price(t))}`;
   }else{
-    $("status").textContent=M.phase==="open"?"Buy when you think it will go up":"";
+    const c=coach(false);
+    $("status").innerHTML=M.phase!=="open"?"":c?`<small class="coach" style="font-size:15px">${c}</small>`:"Buy when you think it will go up";
     a.className="act buy"; a.firstChild.nodeValue="BUY";
     $("actTxt").textContent=`Buy 10 ${x.n} for ${money(SIMPLE_QTY*price(x.t))}`;
   }
@@ -692,12 +850,15 @@ function draw(snap){
   const pro=isPro(), o=M.st[s.sel]; if(!o) return;
   const p=o.p, live=M.phase==="open";
   if(snap||disp===null) disp=p; else disp+=(p-disp)*(1-Math.pow(.93,opts.speed));   // glide gently across each 1-second tick
-  const n=Math.max(24,Math.min(pro?60:50,Math.floor((W-80)/(pro?7:8)))), cs=o.c.slice(-n);
+  const n=Math.max(24,Math.min(pro?60:50,Math.floor((W-80)/(pro?7:8)))), all=o.c, cs=all.slice(-n), off=all.length-cs.length;
+  const line=!pro&&opts.chart!=="candle", k=ind(s.sel), showMA=known("trend")&&k, showLv=known("levels")&&k;
+  const maAt=i=>{const j=off+i; if(j<5) return null; let a=0; for(let q=j-5;q<=j;q++) a+=(q===all.length-1&&live?disp:all[q].c); return a/6;};
   const L=10,R=W-78,T=50,B=H-(pro?24:14), VB=pro?B-(B-T)*.16:B;
-  let lo=Infinity,hi=-Infinity; for(const c of cs){lo=Math.min(lo,c.l);hi=Math.max(hi,c.h);}
+  let lo=Infinity,hi=-Infinity; for(const c of cs){lo=Math.min(lo,line?c.c:c.l);hi=Math.max(hi,line?c.c:c.h);}
   lo=Math.min(lo,disp); hi=Math.max(hi,disp);
-  const h=s.hold[s.sel], cost=h?h.cost:null, stopP=h&&h.stop?h.cost*(1-h.stop/100):null;
-  if(cost){lo=Math.min(lo,cost);hi=Math.max(hi,cost);} if(stopP) lo=Math.min(lo,stopP);
+  const h=s.hold[s.sel], cost=h?h.cost:null, stopP=h&&h.stop?h.cost*(1-h.stop/100):null, tpP=h&&h.tp?h.cost*(1+h.tp/100):null;
+  if(cost){lo=Math.min(lo,cost);hi=Math.max(hi,cost);} if(stopP) lo=Math.min(lo,stopP); if(tpP) hi=Math.max(hi,tpP);
+  if(showLv){lo=Math.min(lo,k.sup);hi=Math.max(hi,k.res);}
   const pad=(hi-lo)*.1||p*.01; lo-=pad; hi+=pad;
   if(snap||yLo===null){yLo=lo;yHi=hi;} else {yLo+=(lo-yLo)*.05; yHi+=(hi-yHi)*.05;}
   const Y=v=>VB-(v-yLo)/(yHi-yLo)*(VB-T), slot=(R-L)/n, bw=Math.max(3,slot*.64);
@@ -710,7 +871,14 @@ function draw(snap){
       ctx.fillStyle=up?"rgba(34,211,127,.3)":"rgba(255,90,85,.3)"; ctx.fillRect(x,B-vh,bw,vh);});
   }
   let gapX=null;
-  cs.forEach((c,i)=>{
+  if(line){
+    const P=cs.map((c,i)=>[L+i*slot+slot/2,Y(i===cs.length-1&&live?disp:c.c)]), col=disp>=o.open?"#22d37f":"#ff5a55";
+    const g=ctx.createLinearGradient(0,T,0,VB); g.addColorStop(0,col==="#22d37f"?"rgba(34,211,127,.22)":"rgba(255,90,85,.22)"); g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.beginPath(); P.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y)); ctx.lineTo(P[P.length-1][0],VB); ctx.lineTo(P[0][0],VB); ctx.closePath(); ctx.fillStyle=g; ctx.fill();
+    ctx.lineWidth=2.6; ctx.lineJoin="round"; ctx.lineCap="round";
+    for(let i=1;i<P.length;i++){ const old=cs[i].y&&live; ctx.globalAlpha=old?.45:1; ctx.strokeStyle=old?"#8c98bd":col; ctx.beginPath(); ctx.moveTo(P[i-1][0],P[i-1][1]); ctx.lineTo(P[i][0],P[i][1]); ctx.stroke(); }
+    ctx.globalAlpha=1; ctx.fillStyle=col; ctx.beginPath(); ctx.arc(P[P.length-1][0],P[P.length-1][1],4,0,7); ctx.fill();
+  } else cs.forEach((c,i)=>{
     const x=L+i*slot+(slot-bw)/2, isLast=i===cs.length-1&&live;
     const close=isLast?disp:c.c, hh=isLast?Math.max(c.h,disp):c.h, ll=isLast?Math.min(c.l,disp):c.l;
     const col=close>=c.o?"#22d37f":"#ff5a55";
@@ -720,6 +888,13 @@ function draw(snap){
     const y1=Y(Math.max(c.o,close)), y2=Y(Math.min(c.o,close)); ctx.fillStyle=col; ctx.fillRect(x,y1,bw,Math.max(2,y2-y1));
   });
   ctx.globalAlpha=1;
+  if(showMA){ ctx.strokeStyle="#b98cff"; ctx.lineWidth=2.4; ctx.beginPath(); let st=false;
+    cs.forEach((c,i)=>{const v=maAt(i); if(v===null) return; const x=L+i*slot+slot/2; if(st) ctx.lineTo(x,Y(v)); else {ctx.moveTo(x,Y(v)); st=true;}}); ctx.stroke(); }
+  if(showLv){ for(const [v,col,lab,dy] of [[k.res,"#ff5a55","ceiling",-9],[k.sup,"#22d37f","floor",10]]){ const y=Y(v);
+      ctx.setLineDash([5,5]); ctx.strokeStyle=col; ctx.globalAlpha=.8; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(R,y); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+      ctx.fillStyle=col; ctx.textAlign="right"; ctx.fillText(lab,R-4,y+dy); ctx.textAlign="left"; } }
+  if(tpP){const y=Y(tpP);ctx.setLineDash([2,4]);ctx.strokeStyle="#22d37f";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle="#22d37f";ctx.fillText("take-profit",L+4,y-10);}
   if(pro&&gapX!==null&&gapX>L+20){ctx.strokeStyle="rgba(255,216,74,.4)";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(gapX,T-6);ctx.lineTo(gapX,B);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle="#ffd84a";ctx.textBaseline="alphabetic";ctx.fillText("open",gapX+4,B+16);ctx.textBaseline="middle";}
   if(cost){const y=Y(cost);ctx.setLineDash([6,4]);ctx.strokeStyle="#ffd84a";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke();ctx.setLineDash([]);
@@ -735,15 +910,49 @@ function draw(snap){
 /* ---------- "why you lost money" card and settings ---------- */
 let afterLesson=null, resumeAfter=false;
 function holdOn(){ if(M.phase==="open"&&!paused){ resumeAfter=true; setPaused(true); } }
-function letGo(){ if(resumeAfter&&$("lesson").hidden&&$("settings").hidden&&$("proIntro").hidden){ resumeAfter=false; setPaused(false); } }
+const cardsShut=()=>["lesson","settings","proIntro","school","schoolAll","intro"].every(id=>$(id).hidden);
+function letGo(){ if(resumeAfter&&cardsShut()){ resumeAfter=false; setPaused(false); } }
+let schoolBack=null;
+function showSchool(i,fresh){
+  const l=LESSONS[i];
+  $("schoolN").textContent=`Trading School · Lesson ${i+1} of ${LESSONS.length}`;
+  $("schoolT").textContent=l.title; $("schoolPic").innerHTML=l.pic;
+  $("schoolBody").innerHTML=l.pts.map(t=>`<li>${t}</li>`).join(""); $("schoolReal").textContent=l.real;
+  const done=i<school.n;
+  $("schoolTask").innerHTML=`<small>${done?"DONE &#10003;":"YOUR TASK"}</small>${l.task}`;
+  $("schoolGo").textContent=fresh?"Let's try it":"Got it";
+  if(i>school.seen){ school.seen=i; if(l.id==="candles") opts.chart="candle"; persist(); render(); draw(true); }
+  holdOn(); $("school").hidden=false;
+}
+// show the next lesson card if one is waiting (Simple mode, market open, nothing else on screen)
+function maybeSchool(){
+  if(isPro()||M.phase!=="open"||school.n>=LESSONS.length||school.seen>=school.n||!cardsShut()||!$("closed").hidden) return false;
+  showSchool(school.n,true); return true;
+}
+function showSchoolList(){
+  $("schoolAllSum").textContent=school.n>=LESSONS.length?"You finished every lesson. Tap one to read it again.":`${school.n} of ${LESSONS.length} lessons done. Finish a lesson's task to unlock the next one.`;
+  const box=$("lessonList"); box.innerHTML="";
+  LESSONS.forEach((l,i)=>{ const b=document.createElement("button"), open=i<=school.seen;
+    b.className=i===school.n?"now":""; b.disabled=!open;
+    b.innerHTML=`<span class="st">${i<school.n?"&#9989;":open?"&#128216;":"&#128274;"}</span><span>${i+1}. ${l.title}</span>`;
+    b.onclick=()=>{ $("schoolAll").hidden=true; schoolBack=()=>{$("schoolAll").hidden=false;}; showSchool(i,false); };
+    box.append(b); });
+  holdOn(); $("schoolAll").hidden=false;
+}
+function closeSchool(){
+  $("school").hidden=true;
+  if(schoolBack){ const f=schoolBack; schoolBack=null; f(); return; }
+  letGo();
+}
 function showLesson(h,sold,lost,auto){
   const n=byT[h.t].n, held=M.min-(h.at??M.min);
   $("lessonLost").textContent="−"+money(lost);
   $("lessonWhat").innerHTML=`<div>You paid<b class="num">${money(h.cost)}</b></div><div class="arrow">→</div><div>${auto==="close"?"Sold at 4:00":auto==="stop"?"Stop-loss sold":"You sold"}<b class="num down">${money(sold)}</b></div>`;
   let why, tip;
-  if(!auto&&s.sel!==h.t){ why=`You sold your ${n} at ${n}'s price. ${byT[s.sel].n} has its own price.`; tip=`SELL always sells what you own. Look at ${n}'s chart to see its price.`; }
-  else if(auto==="stop"){ why="Your stop-loss sold it to stop a bigger loss."; tip="Nice! A stop-loss is a safety net."; }
+  if(auto==="stop"){ why="Your stop-loss sold it to stop a bigger loss."; tip="Nice! A stop-loss is a safety net."; }
   else if(h.bad){ why=`Bad news: “${h.bad}”`; tip="Bad news makes prices drop. Watch the news bar."; }
+  else if(known("trend")&&!h.above){ why="You bought in a downtrend. The price was under the purple line."; tip="Wait until the price is above the purple line."; }
+  else if(known("levels")&&h.nearRes){ why="You bought right under the red ceiling, where prices often turn down."; tip="Buy near the green floor instead."; }
   else if(auto==="close"){ why="The day ended before the price came back up."; tip="At 4:00 everything is sold. Sell early if you're up."; }
   else if(held<=3){ why="You sold too fast."; tip="Prices wiggle all the time. Wait a few minutes."; }
   else if(byT[h.t].risk==="wild"){ why=`${n} jumps a lot, up and down.`; tip="Wild stocks win big or lose big. Try a calm one."; }
@@ -753,8 +962,7 @@ function showLesson(h,sold,lost,auto){
   const q=h.q||1, per=lost/q, drop=1-sold/h.cost, sh=k=>`${k} share${k>1?"s":""}`;
   const rows=[1,10,100].map(k=>`<tr${k===q?' class="you"':""}><td>${sh(k)}${k===q?" (you)":""}</td><td class="down">−${money(per*k)}</td></tr>`).join("")+
     ([1,10,100].includes(q)?"":`<tr class="you"><td>${sh(q)} (you)</td><td class="down">−${money(lost)}</td></tr>`);
-  const other=!auto&&s.sel!==h.t;
-  $("lessonDetail").innerHTML=(other?`<p>You were looking at <b>${byT[s.sel].n}</b> (${money(price(s.sel))}), but you owned <b>${n}</b>. Each company has its own price, so your ${n} was sold at <b>${money(sold)}</b>.</p>`:"")+
+  $("lessonDetail").innerHTML=
     `<p>Each share lost <b class="down">${money(per)}</b>. You paid ${money(h.cost)} and sold for ${money(sold)}. That's a drop of ${pct(drop).replace(/^[-+−]/,"")}.</p>`+
     `<p>You had <b>${sh(q)}</b>, so every share lost that much:</p>`+
     `<div class="math">${q} × ${money(per)} = <span class="down">${money(lost)}</span></div>`+
@@ -777,14 +985,16 @@ function closeLesson(turnOff){
 }
 function syncSettings(){
   for(const b of document.querySelectorAll("#modeSeg button")) b.classList.toggle("on",b.dataset.m===mode);
-  $("modeHelp").textContent=(isPro()?"Six companies, share amounts, stop-loss, and overnight holding.":"Three companies and one big BUY / SELL button.")+" Both modes trade in the same market at the same prices.";
+  $("modeHelp").textContent=(isPro()?"Six companies, share amounts, stop-loss, and overnight holding.":"One market (the Tiny Market), one big BUY / SELL button, and Trading School.")+" Both modes trade in the same market.";
   $("optExplain").checked=opts.explain; $("optSound").checked=opts.sound;
+  $("schoolSum").textContent=school.n>=LESSONS.length?"All 7 lessons done. Read them again any time.":`${school.n} of ${LESSONS.length} lessons done. Real tricks traders use.`;
   $("restart").textContent=`Start ${isPro()?"Pro":"Simple"} mode over with $10,000`; $("restart").dataset.arm="";
 }
 function openSettings(){ holdOn(); syncSettings(); $("settings").hidden=false; }
 function closeSettings(){
   $("settings").hidden=true;
   if(isPro()&&!seenPro){ seenPro=true; persist(); $("proIntro").hidden=false; return; }
+  if(maybeSchool()) return;
   letGo();
 }
 function setMode(m){
@@ -877,7 +1087,12 @@ $("pause").onclick=()=>setPaused(!paused);
 $("speed").onclick=()=>setSpeed(SPEEDS[(SPEEDS.indexOf(opts.speed)+1)%SPEEDS.length]);
 $("optSound").onchange=e=>{ opts.sound=e.target.checked; persist(); if(opts.sound) sfx("buy"); toast(opts.sound?"Sounds on":"Sounds off"); };
 document.addEventListener("pointerdown",()=>audio(),{once:true});
-$("introGo").onclick=()=>{seenIntro=true;persist();$("intro").hidden=true;setPaused(false);};
+$("introGo").onclick=()=>{seenIntro=true;persist();$("intro").hidden=true;setPaused(false);maybeSchool();};
+$("schoolGo").onclick=closeSchool;
+$("openSchool").onclick=showSchoolList;
+$("schoolAllDone").onclick=()=>{ $("schoolAll").hidden=true; letGo(); };
+$("goal").onclick=()=>{ const o=s.goal; if(!isPro()&&o&&o.k==="lesson") showSchool(o.i,false); };
+$("ctype").onclick=()=>{ opts.chart=opts.chart==="candle"?"line":"candle"; persist(); render(); draw(true); };
 $("proIntroGo").onclick=()=>{$("proIntro").hidden=true; if(afterLesson){const f=afterLesson; afterLesson=null; f();} else letGo();};
 $("nextDay").onclick=nextDay;
 $("restart").onclick=()=>{
@@ -899,6 +1114,8 @@ window.addEventListener("resize",()=>draw(true));
 // Android Back button: close whatever is open, or pause; returning false lets the app close.
 window.appBack=()=>{
   if(!$("lesson").hidden){closeLesson(false);return true;}
+  if(!$("school").hidden){closeSchool();return true;}
+  if(!$("schoolAll").hidden){$("schoolAllDone").click();return true;}
   if(!$("settings").hidden){$("settingsDone").click();return true;}
   if(!$("proIntro").hidden){$("proIntroGo").click();return true;}
   if(!$("intro").hidden){$("introGo").click();return true;}
@@ -907,14 +1124,14 @@ window.appBack=()=>{
 };
 const MK=new Set(["st","min","phase","news","newsBig","used","gapNext"]);
 window.__tt={makeGoal,get s(){return new Proxy(s,{get:(g,k)=>MK.has(k)?M[k]:g[k],set:(g,k,v)=>{(MK.has(k)?M:g)[k]=v;return true;}});},get m(){return M},
-  fresh:()=>{newMarket(); games={simple:null,pro:null}; newGame(mode); lastP=null; buildTabs(); render(); draw(true);},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
+  fresh:()=>{newMarket(); games={simple:null,pro:null}; school={n:0,seen:-1}; newGame(mode); lastP=null; buildTabs(); render(); draw(true);},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
   act,buyShares,sellShares,setQty:q=>{qtyMode=String(q);},nextDay,closeMarket,select:t=>{s.sel=t;},setMode,setPaused,stopLoop,draw,render,
-  closeLesson,openSettings,closeSettings,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,
+  closeLesson,openSettings,closeSettings,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,ind,LESSONS,showSchool,closeSchool,get school(){return school},setSchool:(n,seen)=>{school={n,seen:seen??n};},
   get own(){const t=Object.keys(s.hold)[0];return t?Object.assign({t},s.hold[t]):null;}};
 
 load(); buildTabs(); render(); draw(true); requestAnimationFrame(frame);
 if(M.phase==="closed") closeMarket();
 else if(!seenIntro){ paused=true; render(); $("intro").hidden=false; }
-else setPaused(M.min>0);   // a day already in progress starts paused, so nothing moves before you look
+else { setPaused(M.min>0); maybeSchool(); }   // a day already in progress starts paused, so nothing moves before you look
 })();
 </script>

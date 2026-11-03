@@ -13,29 +13,35 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
     const T=window.__tt; T.stopLoop(); T.render(); document.getElementById("pause").textContent="Pause"; T.draw(true);});
   await p.goto(url); await p.evaluate(()=>localStorage.clear()); await p.goto(url); await wait(700);
   await p.screenshot({path:out+"/1-welcome.png"});
-  // holding Pizza Rocket and up
-  for(let tries=0;tries<80;tries++){
-    const ok=await p.evaluate(()=>{const T=window.__tt; T.stopLoop(); document.getElementById("intro").hidden=true;
-      T.fresh(); T.select("PZZA"); T.s.goal={k:"wins",n:2,prog:1,done:false}; T.s.streak=1; for(let i=0;i<30;i++) T.tick(); T.act(); for(let i=0;i<60;i++) T.tick();
-      return T.worth()>10250&&T.worth()<10900;});
+  // Trading School card
+  await p.click("#introGo"); await wait(200);
+  await p.evaluate(()=>{const T=window.__tt; T.closeSchool(); T.stopLoop(); T.setSchool(1,0); T.showSchool(1,true);}); await wait(500);
+  await p.screenshot({path:out+"/2-trading-school.png"});
+  await p.evaluate(()=>window.__tt.closeSchool());
+  // holding the Tiny Market and up, with the purple average line, floor, and ceiling
+  for(let tries=0;tries<120;tries++){
+    const ok=await p.evaluate(()=>{const T=window.__tt; T.stopLoop(); for(const id of ["intro","school","lesson"]) document.getElementById(id).hidden=true;
+      T.fresh(); T.setSchool(2,2); T.s.goal=null; T.makeGoal(T.s); T.s.streak=1; for(let i=0;i<60;i++) T.tick(); T.act(); for(let i=0;i<25;i++) T.tick();
+      return !!T.own&&T.worth()>10006&&T.worth()<10040;});
     if(ok) break;
   }
-  await tidy(); await wait(300); await p.screenshot({path:out+"/2-buy-low.png"});
-  // cash out: the toast shows the profit
+  await tidy(); await wait(300); await p.screenshot({path:out+"/3-chart-tools.png"});
+  // cash out: the money pops up
   await wait(1200); await p.evaluate(()=>{const T=window.__tt; T.act();}); await wait(450);
   await p.evaluate(()=>{document.querySelectorAll(".ping,.flash").forEach(e=>e.classList.remove("ping","flash")); window.__tt.draw(true); document.getElementById("pause").textContent="Pause";});
-  await p.screenshot({path:out+"/3-sell-high.png"});
+  await p.screenshot({path:out+"/4-sell-high.png"});
   // end of day
-  await p.evaluate(()=>{const T=window.__tt; T.select("MOON"); while(T.s.phase==="open") T.tick();});
+  await p.evaluate(()=>{const T=window.__tt; while(T.s.phase==="open") T.tick();});
   await wait(300); await p.evaluate(()=>document.getElementById("toast").style.opacity=0); await wait(3500);
-  await p.screenshot({path:out+"/4-day-done.png"});
+  await p.screenshot({path:out+"/5-day-done.png"});
   // Pro mode
-  await p.click("#nextDay"); await p.click("#openSettings"); await p.click('#modeSeg button[data-m="pro"]'); await p.click("#settingsDone"); await wait(150); await p.click("#proIntroGo");
+  await p.click("#nextDay"); await wait(150); await p.evaluate(()=>{ if(!document.getElementById("school").hidden) window.__tt.closeSchool(); });
+  await p.click("#openSettings"); await p.click('#modeSeg button[data-m="pro"]'); await p.click("#settingsDone"); await wait(150); await p.click("#proIntroGo");
   for(let tries=0;tries<60;tries++){
     const ok=await p.evaluate(()=>{const T=window.__tt; T.stopLoop(); T.fresh(); for(let i=0;i<40;i++) T.tick(); document.getElementById("lesson").hidden=true; T.buyShares("ROBO",20); T.buyShares("GLOW",100);
       T.select("ROBO"); T.setQty(10); for(let i=0;i<50;i++) T.tick(); if(T.s.hold.ROBO) T.s.hold.ROBO.stop=5; document.getElementById("lesson").hidden=true; return !!T.s.hold.ROBO&&T.worth()>10080;});
     if(ok) break;
   }
-  await tidy(); await wait(1500); await p.screenshot({path:out+"/5-pro-mode.png"});
+  await tidy(); await wait(1500); await p.screenshot({path:out+"/6-pro-mode.png"});
   await b.close(); console.log(fs.readdirSync(out));
 })();
