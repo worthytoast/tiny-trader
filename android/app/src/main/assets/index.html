@@ -365,8 +365,12 @@ const ALL=[
 // Simple mode trades one thing: the Tiny Market, all six companies rolled into one price (like a real index fund).
 const IDX={t:"TINY",n:"Tiny Market",p:100,risk:"calm",index:1};
 const byT=Object.fromEntries(ALL.map(x=>[x.t,x])); byT.TINY=IDX;
+// Each morning the Tiny Market opens at 100 x the average of the six companies (price / normal price).
+// During the day it moves SWING times as much as that average, because averaging six companies smooths out their swings.
+const SWING=3;
+const avgNow=()=>ALL.reduce((a,x)=>a+M.st[x.t].p/x.p,0)/ALL.length;
 const idxFrom=f=>r2(100*ALL.reduce((a,x)=>a+f(x)/x.p,0)/ALL.length);
-const idxNow=()=>idxFrom(x=>M.st[x.t].p);
+const idxNow=()=>{ const o=M.st.TINY; if(!o||!o.a0) return r2(100*avgNow()); return r2(100*o.a0*Math.pow(avgNow()/o.a0,SWING)); };
 const MKT_GOOD=["Great news for the economy: almost every stock jumps","Shoppers are spending a lot, and the whole market climbs"];
 const MKT_BAD=["Market jitters: almost every stock slips","Economy worries pull the whole market down"];
 
@@ -401,7 +405,7 @@ function buildIndex(){
     const at=x=>{const cs=M.st[x.t].c;return cs[cs.length-n+i];}, f=k=>idxFrom(x=>at(x)[k]), o=f("o"), cl=f("c"), a=at(ALL[0]);
     c.push({o,c:cl,h:Math.max(o,cl),l:Math.min(o,cl),v:ALL.reduce((v,x)=>v+(at(x).v||0),0),y:a.y,gap:a.gap});
   }
-  const p=idxNow(); M.st.TINY={p,c,mom:0,open:M.st.TINY?M.st.TINY.open:p};
+  const a0=avgNow(), p=r2(100*a0); M.st.TINY={p,c,mom:0,open:p,a0};
 }
 function prefill(t){ // a few faded early-morning bars so the chart isn't empty at the open
   const x=byT[t], o=M.st[t]; let p=o.p; const pre=[];
@@ -423,7 +427,7 @@ function openMarket(){
     o.mom=0; o.open=o.p;
   }
   if(!M.st.TINY||!M.st.TINY.c.length) buildIndex(); else for(const c of M.st.TINY.c) c.y=1;
-  M.st.TINY.p=M.st.TINY.open=idxNow(); M.st.TINY.mom=0;
+  M.st.TINY.a0=avgNow(); M.st.TINY.p=M.st.TINY.open=idxNow(); M.st.TINY.mom=0;
   M.gapNext=true; M.lastNews=null;
 }
 function newGame(m){
@@ -463,7 +467,7 @@ function load(){
   if(!games[mode]) newGame(mode);
   s=games[mode];
   for(const m in games){ const g=games[m]; if(!g) continue; g.mode=m; if(!g.goal){ g.wins=g.wins||0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); }
-    if(m==="simple"&&g.goal.k==="profit"&&g.goal.n>10&&!g.goal.done) g.goal.n=10; }   // Simple went from all-in to 10 shares
+    if(m==="simple"&&g.goal.k==="profit"&&g.goal.n>20&&!g.goal.done) g.goal.n=20; }   // Simple went from all-in to 10 shares
 }
 // Older versions gave each mode its own prices. Merge them into one market (the mode you were playing wins),
 // and cash out the other mode's shares at its old price so nobody gains or loses from the change.
@@ -502,9 +506,9 @@ const LESSONS=[
   pts:["The green line is the floor: the lowest price of the last hour. The red line is the ceiling: the highest.","Prices often bounce up off the floor and turn down at the ceiling.","Buy near the floor. Sell near the ceiling.","If the price smashes through a line, it often keeps going. That's called a breakout."],
   real:"Real traders call these support (floor) and resistance (ceiling)."},
  {id:"exits",title:"Plan your exit",task:"Hit your take-profit line",
-  pic:SV(HL(28,"#22d37f")+HL(62,"#ffd84a","3 4")+HL(86,"#ff5a55")+PL("20,62 60,70 100,56 140,66 180,46 220,42 262,28","#eef2ff",2.5)+`<circle cx="262" cy="28" r="6" fill="#22d37f"/>`+TX(12,22,"take-profit +1.5%","#22d37f")+TX(12,100,"stop-loss −1%","#ff5a55")+TX(292,56,"you paid","#ffd84a","end")),
-  pts:["Pros decide when they'll sell before they buy.","Now every buy gets two lines. Take-profit (green) sells for you when you're up 1.5%. Stop-loss (red) sells if it drops 1%.","Your wins are bigger than your losses, so you can be wrong sometimes and still come out ahead."],
-  real:"Real traders call this risk and reward. Here you risk $1 to try to make $1.50."},
+  pic:SV(HL(28,"#22d37f")+HL(62,"#ffd84a","3 4")+HL(86,"#ff5a55")+PL("20,62 60,70 100,56 140,66 180,46 220,42 262,28","#eef2ff",2.5)+`<circle cx="262" cy="28" r="6" fill="#22d37f"/>`+TX(12,22,"take-profit +3%","#22d37f")+TX(12,100,"stop-loss −2%","#ff5a55")+TX(292,56,"you paid","#ffd84a","end")),
+  pts:["Pros decide when they'll sell before they buy.","Now every buy gets two lines. Take-profit (green) sells for you when you're up 3%. Stop-loss (red) sells if it drops 2%.","Your wins are bigger than your losses, so you can be wrong sometimes and still come out ahead."],
+  real:"Real traders call this risk and reward. Here you risk $2 to try to make $3."},
  {id:"news",title:"News moves prices",task:"Buy right after good news, sell for a profit",
   pic:SV(PL("10,78 40,74 70,80 100,75 130,77 150,42 180,36 210,44 240,38 290,34","#22d37f")+`<line x1="150" x2="150" y1="20" y2="100" stroke="#ffd84a" stroke-width="2" stroke-dasharray="3 4"/>`+TX(156,22,"Good news!","#ffd84a")),
   pts:["Good news about a company pushes its price up. Bad news pulls it down.","The Tiny Market is all six companies together, so every headline moves it a little. Big news moves it a lot.","News moves happen fast. Sometimes they keep going, and sometimes they fade back."],
@@ -540,7 +544,7 @@ function makeGoal(g){
   const ts=modeList(g.mode).map(x=>x.t), kinds=pro?["profit","profit","wins","stock","quick","spread"]:["profit","wins","quick",...TECH];
   const k=pick(kinds.filter(x=>x!==(g.goal&&g.goal.k)));
   const goal={k,prog:0,done:false};
-  if(k==="profit") goal.n=pro?Math.max(50,Math.round(g.dayStart*.01/50)*50):10;   // Simple trades 10 shares, so $10 is a good day
+  if(k==="profit") goal.n=pro?Math.max(50,Math.round(g.dayStart*.01/50)*50):20;   // Simple trades 10 shares of the Tiny Market, so $20 is a good day
   else if(k==="wins") goal.n=pro?3:2;
   else if(k==="spread") goal.n=3;
   else goal.n=1;
@@ -688,7 +692,7 @@ function buyShares(t,q){
   const h=s.hold[t]||(s.hold[t]={sh:0,cost:0,at:M.min,stop:0});
   h.cost=(h.cost*h.sh+q*p)/(h.sh+q); h.sh+=q; h.at=M.min; s.cash=r2(s.cash-q*p);
   const k=ind(t), rn=recentNews(); h.above=!!(k&&k.above); h.nearSup=!!(k&&k.nearSup); h.nearRes=!!(k&&k.nearRes); h.afterGood=!!(rn&&rn.good); h.afterBad=!!(rn&&!rn.good);
-  if(!isPro()&&known("exits")){ h.stop=1; h.tp=1.5; }
+  if(!isPro()&&known("exits")){ h.stop=2; h.tp=3; }
   persist(); toast(`Bought ${q} ${byT[t].n} at ${money(p)}`); buzz(15); sfx("buy"); goalUpdate({buy:true}); render();
 }
 // g is the game whose shares are sold (default: the mode on screen). A game can only sell its own shares.
@@ -860,7 +864,7 @@ function draw(snap){
   const line=!pro&&opts.chart!=="candle", k=ind(s.sel), showMA=known("trend")&&k, showLv=known("levels")&&k;
   const maAt=i=>{const j=off+i; if(j<5) return null; let a=0; for(let q=j-5;q<=j;q++) a+=(q===all.length-1&&live?disp:all[q].c); return a/6;};
   const L=10,R=W-78,T=50,B=H-(pro?24:14), VB=pro?B-(B-T)*.16:B;
-  let lo=Infinity,hi=-Infinity; for(const c of cs){lo=Math.min(lo,line?c.c:c.l);hi=Math.max(hi,line?c.c:c.h);}
+  let lo=Infinity,hi=-Infinity; for(const c of cs){lo=Math.min(lo,c.l);hi=Math.max(hi,c.h);}
   lo=Math.min(lo,disp); hi=Math.max(hi,disp);
   const h=s.hold[s.sel], cost=h?h.cost:null, stopP=h&&h.stop?h.cost*(1-h.stop/100):null, tpP=h&&h.tp?h.cost*(1+h.tp/100):null;
   if(cost){lo=Math.min(lo,cost);hi=Math.max(hi,cost);} if(stopP) lo=Math.min(lo,stopP); if(tpP) hi=Math.max(hi,tpP);
@@ -878,11 +882,14 @@ function draw(snap){
   }
   let gapX=null;
   if(line){
-    const P=cs.map((c,i)=>[L+i*slot+slot/2,Y(i===cs.length-1&&live?disp:c.c)]), col=disp>=o.open?"#22d37f":"#ff5a55";
+    // each 5-minute bar becomes 4 points (open, low/high, high/low, close) so the line shows every wiggle
+    const P=[], PY=[], col=disp>=o.open?"#22d37f":"#ff5a55";
+    cs.forEach((c,i)=>{ const last=i===cs.length-1&&live, cl=last?disp:c.c, hh=last?Math.max(c.h,disp):c.h, ll=last?Math.min(c.l,disp):c.l;
+      const seq=cl>=c.o?[c.o,ll,hh,cl]:[c.o,hh,ll,cl]; seq.forEach((v,k)=>{ if(last&&k>0&&k<3&&(v===c.o||v===cl)) return; P.push([L+i*slot+slot*(.12+k*.25),Y(v)]); PY.push(c.y&&live); }); });
     const g=ctx.createLinearGradient(0,T,0,VB); g.addColorStop(0,col==="#22d37f"?"rgba(34,211,127,.22)":"rgba(255,90,85,.22)"); g.addColorStop(1,"rgba(0,0,0,0)");
     ctx.beginPath(); P.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y)); ctx.lineTo(P[P.length-1][0],VB); ctx.lineTo(P[0][0],VB); ctx.closePath(); ctx.fillStyle=g; ctx.fill();
     ctx.lineWidth=2.6; ctx.lineJoin="round"; ctx.lineCap="round";
-    for(let i=1;i<P.length;i++){ const old=cs[i].y&&live; ctx.globalAlpha=old?.45:1; ctx.strokeStyle=old?"#8c98bd":col; ctx.beginPath(); ctx.moveTo(P[i-1][0],P[i-1][1]); ctx.lineTo(P[i][0],P[i][1]); ctx.stroke(); }
+    for(let i=1;i<P.length;i++){ const old=PY[i]; ctx.globalAlpha=old?.45:1; ctx.strokeStyle=old?"#8c98bd":col; ctx.beginPath(); ctx.moveTo(P[i-1][0],P[i-1][1]); ctx.lineTo(P[i][0],P[i][1]); ctx.stroke(); }
     ctx.globalAlpha=1; ctx.fillStyle=col; ctx.beginPath(); ctx.arc(P[P.length-1][0],P[P.length-1][1],4,0,7); ctx.fill();
   } else cs.forEach((c,i)=>{
     const x=L+i*slot+(slot-bw)/2, isLast=i===cs.length-1&&live;
@@ -1093,7 +1100,7 @@ $("pause").onclick=()=>setPaused(!paused);
 $("speed").onclick=()=>setSpeed(SPEEDS[(SPEEDS.indexOf(opts.speed)+1)%SPEEDS.length]);
 $("optSound").onchange=e=>{ opts.sound=e.target.checked; persist(); if(opts.sound) sfx("buy"); toast(opts.sound?"Sounds on":"Sounds off"); };
 document.addEventListener("pointerdown",()=>audio(),{once:true});
-$("introGo").onclick=()=>{seenIntro=true;persist();$("intro").hidden=true;setPaused(false);maybeSchool();};
+$("introGo").onclick=()=>{seenIntro=true; school.seen=Math.max(school.seen,0); persist(); $("intro").hidden=true; render(); setPaused(false);};   // the intro already covers lesson 1
 $("schoolGo").onclick=closeSchool;
 $("openSchool").onclick=showSchoolList;
 $("schoolAllDone").onclick=()=>{ $("schoolAll").hidden=true; letGo(); };
@@ -1114,7 +1121,11 @@ $("optExplain").onchange=e=>{ opts.explain=e.target.checked; persist(); toast(op
 $("lessonDismiss").onclick=()=>closeLesson(true);
 $("lessonMore").onclick=()=>{ const o=$("lessonDetail").hidden; setMore(o); if(o) try{$("lessonDetail").scrollIntoView({behavior:"smooth",block:"nearest"});}catch(e){} };
 $("lessonAgain").onclick=()=>closeLesson(false);
-document.addEventListener("visibilitychange",()=>{ if(document.hidden){ if(!paused&&M.phase==="open") setPaused(true); persist(); } });
+let autoPaused=false;
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){ if(!paused&&M.phase==="open"){ autoPaused=true; setPaused(true); } persist(); }
+  else if(autoPaused){ autoPaused=false; if(cardsShut()&&$("closed").hidden&&M.phase==="open") setPaused(false); }
+});
 window.addEventListener("resize",()=>draw(true));
 
 // Android Back button: close whatever is open, or pause; returning false lets the app close.
@@ -1136,9 +1147,13 @@ window.__tt={makeGoal,get s(){return new Proxy(s,{get:(g,k)=>MK.has(k)?M[k]:g[k]
   get own(){const t=Object.keys(s.hold)[0];return t?Object.assign({t},s.hold[t]):null;}};
 
 load(); buildTabs(); render(); draw(true); requestAnimationFrame(frame);
-if(M.phase==="closed") closeMarket();
-else if(!seenIntro){ paused=true; render(); $("intro").hidden=false; }
-else { setPaused(M.min>0); maybeSchool(); }   // a day already in progress starts paused, so nothing moves before you look
+// Opening the game starts it right away: a day in progress keeps going, and a closed market opens the next day.
+if(!seenIntro){ if(M.phase==="closed") nextDay(); paused=true; stopLoop(); render(); $("intro").hidden=false; }
+else {
+  // a lesson waiting from last time doesn't block the start: its tool turns on and the goal bar opens the card
+  if(!isPro()&&school.n<LESSONS.length&&school.seen<school.n){ school.seen=school.n; if(LESSONS[school.n].id==="candles") opts.chart="candle"; persist(); setTimeout(()=>toast("New lesson! Tap the goal bar to read it."),1800); }
+  if(M.phase==="closed"){ nextDay(); toast(`Day ${s.day}: the market is open!`); } else setPaused(false);
+}
 })();
 </script>
 

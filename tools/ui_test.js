@@ -15,10 +15,7 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   const vis=id=>p.evaluate(id=>!document.getElementById(id).hidden,id);
   // ---- one market + Trading School
   check("Simple shows one market chart, no company tabs",await p.evaluate(()=>document.getElementById("tabs").hidden&&document.getElementById("cName").textContent.startsWith("Tiny Market")));
-  check("Trading School lesson 1 opens after the intro",(await vis("school"))&&await p.evaluate(()=>document.getElementById("schoolT").textContent==="Buy low, sell high"));
-  check("the game waits while the lesson is open",await p.evaluate(()=>window.__tt.isPaused()));
-  await p.click("#schoolGo"); await wait(150);
-  check("Let's try it closes the lesson and starts the game",!(await vis("school"))&&await p.evaluate(()=>!window.__tt.isPaused()));
+  check("Start trading goes straight into the game (no extra card)",!(await vis("school"))&&await p.evaluate(()=>!window.__tt.isPaused()));
   check("goal strip shows the lesson task",await p.evaluate(()=>document.getElementById("goalTxt").textContent.startsWith("Lesson 1")));
   await p.evaluate(()=>{const T=window.__tt; T.act(); mv(1.03);}); await p.click("#act"); await wait(2300);
   check("winning a trade opens lesson 2",(await vis("school"))&&await p.evaluate(()=>document.getElementById("schoolT").textContent==="Follow the trend"&&window.__tt.school.n===1));
@@ -70,10 +67,11 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   check("switch turns tips back on",await p.evaluate(()=>window.__tt.opts.explain===true));
   check("Done closes Settings and resumes",!(await vis("settings"))&&await p.evaluate(()=>!window.__tt.isPaused()));
   await p.reload(); await wait(400);
+  check("reopening the game starts it right away",await p.evaluate(()=>!window.__tt.isPaused()&&document.getElementById("school").hidden));
   check("setting is remembered after reload",await p.evaluate(()=>window.__tt.opts.explain===true));
   // 4:00 auto-sale at a loss: card first, then the day card
   await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); T.s.hold={}; T.act(); T.own&&(T.s.hold.TINY.stop=0,T.s.hold.TINY.tp=0);
-    while(T.s.min<389) T.tick(); const c=T.own.cost; mv(.9*c/T.price("TINY")); T.tick();});
+    while(T.s.min<389) T.tick(); const c=T.own.cost; mv(Math.cbrt(.9*c/T.price("TINY"))); T.tick(); /* the Tiny Market swings 3x its companies */});
   await wait(200);
   check("auto-sale loss shows the card first",(await vis("lesson"))&&!(await vis("closed")));
   console.log("   reason:",await p.evaluate(()=>document.getElementById("lessonWhy").textContent));

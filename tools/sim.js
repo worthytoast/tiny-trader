@@ -69,8 +69,8 @@ console.log("two winning trades finish the goal and earn a star:",T.s.goal.done&
 console.log("streak counts wins in a row:",T.s.streak===2);
 T.act(); setP("TINY",.97); T.act();
 console.log("a losing trade resets the streak:",T.s.streak===0);
-{const keep=T.school; T.setSchool(7); const g={mode:"simple",dayStart:10000,goal:null}; let ok=true; for(let i=0;i<60;i++){T.makeGoal(g); if(g.goal.k==="profit"&&g.goal.n!==10) ok=false;} console.log("Simple profit goal is $10 (after Trading School):",ok); T.setSchool(keep.n,keep.seen);}
-T.s.goal={k:"profit",n:10,prog:0,done:false}; T.act(); for(const x of T.ALL) setP(x.t,1.05); T.tick();
+{const keep=T.school; T.setSchool(7); const g={mode:"simple",dayStart:10000,goal:null}; let ok=true; for(let i=0;i<60;i++){T.makeGoal(g); if(g.goal.k==="profit"&&g.goal.n!==20) ok=false;} console.log("Simple profit goal is $20 (after Trading School):",ok); T.setSchool(keep.n,keep.seen);}
+T.s.goal={k:"profit",n:20,prog:0,done:false}; T.act(); for(const x of T.ALL) setP(x.t,1.05); T.tick();
 console.log("profit goal fills while you hold a winner:",T.s.goal.done);
 console.log("ranks: 0 stars Rookie, 3 Trader, 40 Legend:",T.rankOf(0)===0&&T.rankOf(3)===1&&T.rankOf(40)===5);
 while(T.s.phase==="open") T.tick(); T.nextDay();
@@ -108,7 +108,8 @@ console.log("Simple shares sold at 4:00 even while in Pro:",!T.own);
 
 // ---- Tiny Market = average of the six companies
 T.setMode("simple"); T.fresh(); for(let i=0;i<50;i++) T.tick();
-{ const avg=100*T.ALL.reduce((a,x)=>a+T.price(x.t)/x.p,0)/6; console.log("Tiny Market is the average of the six companies:",Math.abs(avg-T.price("TINY"))<0.02); }
+{ const avg=T.ALL.reduce((a,x)=>a+T.price(x.t)/x.p,0)/6, a0=T.s.st.TINY.a0; console.log("Tiny Market follows the six companies, 3x the swing:",Math.abs(100*a0*Math.pow(avg/a0,3)-T.price("TINY"))<0.02);
+  let mx=0,mn=1e9; T.fresh(); for(let d=0;d<300;d++){ while(T.s.phase==="open") T.tick(); mx=Math.max(mx,T.price("TINY")); mn=Math.min(mn,T.price("TINY")); T.nextDay(); } console.log("Tiny Market range over 300 days:",mn.toFixed(0),"to",mx.toFixed(0), mn>30&&mx<300); }
 { const k=T.ind("TINY"); console.log("chart tools work (average, floor, ceiling):",!!k&&k.sup<=k.res&&k.ma>0); }
 
 // ---- Trading School
@@ -125,8 +126,8 @@ tries=0; while(T.school.n===1&&tries++<400){ if(T.s.phase!=="open") T.nextDay();
 console.log("a win bought above the line passes lesson 2:",T.school.n===2);
 // lesson 4: take-profit and stop-loss lines on every buy
 T.setSchool(3,3); if(T.s.phase!=="open") T.nextDay(); T.s.goal=null; T.makeGoal(T.s);
-T.tick(); T.act(); console.log("buys get a stop-loss and take-profit after lesson 4:",T.own.stop===1&&T.own.tp===1.5);
-for(const x of T.ALL) setP(x.t,1.03); T.tick(); console.log("take-profit sells by itself and passes lesson 4:",!T.own&&T.school.n===4);
+T.tick(); T.act(); console.log("buys get a stop-loss and take-profit after lesson 4:",T.own.stop===2&&T.own.tp===3);
+for(const x of T.ALL) setP(x.t,1.06); T.tick(); console.log("take-profit sells by itself and passes lesson 4:",!T.own&&T.school.n===4);
 T.setSchool(4,4); T.act(); for(const x of T.ALL) setP(x.t,.97); T.tick(); console.log("stop-loss sells by itself in Simple:",!T.own);
 // lesson 7: finish the day up
 T.setSchool(6,6); T.s.goal=null; T.makeGoal(T.s); T.s.cash+=50; while(T.s.phase==="open") T.tick();
