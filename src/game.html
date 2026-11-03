@@ -85,13 +85,16 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .big{font-family:var(--display);font-size:46px;margin:4px 0}
 .go{width:100%;border:0;border-radius:14px;background:var(--blue);color:#fff;font-family:var(--display);font-size:22px;padding:14px;margin-top:10px}
 .ghost{background:none;border:0;color:var(--soft);font-weight:700;font-size:13px;text-decoration:underline;padding:8px;margin-top:6px}
-.lesson .card{text-align:left}
-.lesson h2{text-align:center}
-.lesson .lost{font-family:var(--display);font-size:34px;text-align:center;margin:2px 0 8px}
-.lesson .box{background:var(--panel2);border-radius:12px;padding:10px 14px;margin:12px 0}
-.lesson .box b.h{display:block;font-family:var(--display);font-weight:400;font-size:18px;color:var(--up);margin-bottom:2px}
-.lesson ul{margin:4px 0 0;padding-left:20px;line-height:1.5}
-.lesson li{margin:3px 0}
+.lesson .card{text-align:center}
+.lesson .lost{font-family:var(--display);font-size:40px;margin:0 0 10px}
+.lesson .bs{display:flex;gap:8px;margin:0 0 12px}
+.lesson .bs div{flex:1;background:var(--panel2);border-radius:12px;padding:8px 4px;font-size:14px;color:var(--soft)}
+.lesson .bs b{display:block;font-family:var(--display);font-weight:400;font-size:24px;color:var(--hi)}
+.lesson .bs b.down{color:var(--down)}
+.lesson .bs .arrow{flex:0;align-self:center;background:none;padding:0;font-size:22px;color:var(--down)}
+.lesson .lw{font-size:19px;line-height:1.4;margin:0 0 12px;color:var(--hi)}
+.lesson .tip{background:var(--panel2);border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:17px;line-height:1.4}
+.lesson .tip b.h{color:var(--up)}
 .why{color:var(--hi)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .btn2{border:0;border-radius:14px;padding:13px 8px;font-family:var(--display);font-size:19px}
@@ -238,24 +241,16 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 
 <div class="scrim lesson" id="lesson" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="lessonT">
-    <h2 id="lessonT">Why you lost money</h2>
+    <h2 id="lessonT">You lost money</h2>
     <div class="lost num down" id="lessonLost"></div>
-    <p id="lessonWhat"></p>
-    <p class="why" id="lessonWhy"></p>
-    <div class="box">
-      <b class="h">How to make money</b>
-      <ul>
-        <li>Buy when you think the price will go <b class="up">up</b>.</li>
-        <li>Sell when the price is <b>higher</b> than what you paid. That's above the yellow line.</li>
-        <li>Good news often pushes a price up. Bad news often pulls it down.</li>
-        <li>If the price keeps falling, selling early keeps a small loss from getting bigger.</li>
-      </ul>
-    </div>
+    <div class="bs" id="lessonWhat"></div>
+    <p class="lw" id="lessonWhy"></p>
+    <p class="tip" id="lessonTip"></p>
     <div class="pair">
       <button class="btn2 dim" id="lessonDismiss">Dismiss</button>
       <button class="btn2 main" id="lessonAgain">Remind me again</button>
     </div>
-    <p class="note">Dismiss turns these off. You can turn them back on in Settings.</p>
+    <p class="note">Dismiss = no more of these. Turn them back on in Settings.</p>
   </div>
 </div>
 
@@ -728,19 +723,19 @@ let afterLesson=null, resumeAfter=false;
 function holdOn(){ if(M.phase==="open"&&!paused){ resumeAfter=true; setPaused(true); } }
 function letGo(){ if(resumeAfter&&$("lesson").hidden&&$("settings").hidden&&$("proIntro").hidden){ resumeAfter=false; setPaused(false); } }
 function showLesson(h,sold,lost,auto){
-  const n=byT[h.t].n, held=M.min-(h.at??M.min), shares=isPro()?`${h.q} share${h.q>1?"s":""} of `:"";
+  const n=byT[h.t].n, held=M.min-(h.at??M.min);
   $("lessonLost").textContent="−"+money(lost);
-  $("lessonWhat").innerHTML=`You bought ${shares}${n} at <b>${money(h.cost)}</b>. ${auto==="close"?"At 4:00 it was sold":auto==="stop"?"Your stop-loss sold it":"You sold it"} at <b>${money(sold)}</b>. `+
-    `The price went <b class="down">down</b> after you bought, so your shares were worth less than you paid.`;
-  let why;
-  if(auto==="stop") why=`Your stop-loss sold it when the price fell ${h.stop}% below what you paid. That kept a small loss from turning into a big one. Good safety net!`;
-  else if(h.bad) why=`Bad news came out while you owned it: “${h.bad}”. Bad news usually pulls a price down.`;
-  else if(auto==="close") why="The market closed at 4:00 while the price was still lower than what you paid, so it was sold at a loss.";
-  else if(held<=3) why="You sold very quickly. Prices wiggle up and down a little all the time, so a quick sell can catch a small dip.";
-  else if(byT[h.t].risk==="wild") why=`${n} is a wild stock. Its price makes big jumps, both up and down.`;
-  else why="Prices go up and down, and nobody knows for sure which way they will go next. That is the risk of trading.";
+  $("lessonWhat").innerHTML=`<div>You paid<b class="num">${money(h.cost)}</b></div><div class="arrow">→</div><div>${auto==="close"?"Sold at 4:00":auto==="stop"?"Stop-loss sold":"You sold"}<b class="num down">${money(sold)}</b></div>`;
+  let why, tip;
+  if(auto==="stop"){ why="Your stop-loss sold it to stop a bigger loss."; tip="Nice! A stop-loss is a safety net."; }
+  else if(h.bad){ why=`Bad news: “${h.bad}”`; tip="Bad news makes prices drop. Watch the news bar."; }
+  else if(auto==="close"){ why="The day ended before the price came back up."; tip="At 4:00 everything is sold. Sell early if you're up."; }
+  else if(held<=3){ why="You sold too fast."; tip="Prices wiggle all the time. Wait a few minutes."; }
+  else if(byT[h.t].risk==="wild"){ why=`${n} jumps a lot, up and down.`; tip="Wild stocks win big or lose big. Try a calm one."; }
+  else { why="The price went down. That happens!"; tip="Try to sell above the yellow line (what you paid)."; }
+  $("lessonTip").innerHTML=`<b class="h">Tip:</b> ${tip}`;
   $("lessonWhy").textContent=why;
-  holdOn(); $("lesson").hidden=false;
+  clearTimeout(tt); $("toast").style.opacity=0; document.querySelectorAll(".pop").forEach(e=>e.remove()); holdOn(); $("lesson").hidden=false;
   try{$("lessonAgain").focus({preventScroll:true});}catch(e){}
 }
 function closeLesson(turnOff){
