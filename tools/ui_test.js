@@ -16,6 +16,14 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   // ---- one market + Trading School
   check("Simple shows one market chart, no company tabs",await p.evaluate(()=>document.getElementById("tabs").hidden&&document.getElementById("cName").textContent.startsWith("Tiny Market")));
   check("Start trading goes straight into the game (no extra card)",!(await vis("school"))&&await p.evaluate(()=>!window.__tt.isPaused()));
+  await p.click("#openHelp"); await wait(150);
+  check("? button opens How it works and pauses",(await vis("help"))&&await p.evaluate(()=>window.__tt.isPaused()));
+  check("guide covers the basics, chart tools, and Pro mode",await p.evaluate(()=>document.querySelectorAll("#help details").length>=20&&document.querySelectorAll("#help h3").length===3));
+  check("tools not learned yet say which lesson unlocks them",await p.evaluate(()=>document.querySelectorAll("#help .lk").length===4));
+  await p.click("#help details:nth-of-type(2) summary"); await wait(100);
+  check("tapping a topic opens it",await p.evaluate(()=>document.querySelectorAll("#help details[open]").length===2));
+  await p.click("#helpDone"); await wait(150);
+  check("Got it closes the guide and resumes",!(await vis("help"))&&await p.evaluate(()=>!window.__tt.isPaused()));
   check("goal strip shows the lesson task",await p.evaluate(()=>document.getElementById("goalTxt").textContent.startsWith("Lesson 1")));
   await p.evaluate(()=>{const T=window.__tt; T.act(); mv(1.03);}); await p.click("#act"); await wait(2300);
   check("winning a trade opens lesson 2",(await vis("school"))&&await p.evaluate(()=>document.getElementById("schoolT").textContent==="Follow the trend"&&window.__tt.school.n===1));

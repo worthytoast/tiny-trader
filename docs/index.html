@@ -128,6 +128,22 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .status small.coach{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.3}
 .ctype{position:absolute;right:10px;bottom:8px;z-index:2;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:4px 10px;font-weight:800;font-size:12px;color:var(--soft)}
 .goal.learn{cursor:pointer}
+.help .card{text-align:left}
+.help h2{text-align:center}
+.help .intro{text-align:center;color:var(--soft);margin:0 0 10px}
+.help h3{font-family:var(--display);font-weight:400;font-size:19px;color:var(--hi);margin:14px 0 6px}
+.help details{background:var(--panel2);border-radius:12px;margin:6px 0;border:1px solid var(--line)}
+.help summary{list-style:none;cursor:pointer;padding:11px 12px;font-weight:800;font-size:15px;display:flex;align-items:center;gap:10px}
+.help summary::-webkit-details-marker{display:none}
+.help summary .ic{flex:none;width:24px;text-align:center;font-size:17px}
+.help summary .tt{flex:1}
+.help summary .lk{flex:none;font-size:11px;font-weight:800;color:var(--bg);background:var(--soft);border-radius:6px;padding:1px 6px}
+.help summary::after{content:"+";flex:none;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:var(--blue);color:#fff;font-family:var(--display);font-size:16px}
+.help details[open] summary::after{content:"\2212"}
+.help .bd{padding:0 14px 12px 46px;font-size:15px;line-height:1.5}
+.help .bd p{margin:0 0 8px}
+.help .bd .ex{background:var(--panel);border-radius:10px;padding:8px 10px;font-weight:700}
+.help .bd .soon{color:var(--soft);font-size:13px}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .btn2{border:0;border-radius:14px;padding:13px 8px;font-family:var(--display);font-size:19px}
 .btn2.dim{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
@@ -180,6 +196,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .rank{background:var(--panel2);border-radius:12px;padding:10px 12px;margin:12px 0 4px;font-weight:700}
 .rank b{font-family:var(--display);font-weight:400;font-size:22px;color:var(--hi);display:block}
 .rank small{color:var(--soft);display:block;margin-top:2px}
+@media (max-width:400px){.worth{font-size:28px}.pro .worth{font-size:25px}.btns{gap:4px}.small{padding:5px 9px}.icon{padding:5px 8px}.spd{min-width:34px}.top{gap:6px}}
 @media (max-height:700px){.goal{padding:4px 10px}.pro .worth{font-size:26px}.pro .chips button{padding:5px 0}.pro .duo .act{padding:8px 6px;font-size:19px}}
 @media (max-height:640px){.worth{font-size:28px}.act{padding:12px 10px;font-size:26px}.app{gap:9px}}
 @media (prefers-reduced-motion:reduce){.tab.ping,.news.flash,.clock.urgent,.act.glow,.goal.cheer,.news .tag.hot,.edge.hit{animation:none}}
@@ -196,7 +213,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     </div>
     <div class="right">
       <span class="clock num" id="clock">9:30 AM</span>
-      <div class="btns"><button class="small" id="pause">Pause</button><button class="small spd" id="speed" aria-label="Speed">1&times;</button><button class="small icon" id="openSettings" aria-label="Settings">&#9881;&#xFE0E;</button></div>
+      <div class="btns"><button class="small" id="pause">Pause</button><button class="small spd" id="speed" aria-label="Speed">1&times;</button><button class="small icon" id="openHelp" aria-label="How it works">?</button><button class="small icon" id="openSettings" aria-label="Settings">&#9881;&#xFE0E;</button></div>
     </div>
   </div>
 
@@ -331,6 +348,15 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <p id="schoolAllSum"></p>
     <div class="lessonlist" id="lessonList"></div>
     <button class="go" id="schoolAllDone">Done</button>
+  </div>
+</div>
+
+<div class="scrim help" id="help" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="helpT">
+    <h2 id="helpT">How it works</h2>
+    <p class="intro">Tap anything to learn what it is and how it works.</p>
+    <div id="helpList"></div>
+    <button class="go" id="helpDone">Got it</button>
   </div>
 </div>
 
@@ -925,8 +951,54 @@ function draw(snap){
 /* ---------- "why you lost money" card and settings ---------- */
 let afterLesson=null, resumeAfter=false;
 function holdOn(){ if(M.phase==="open"&&!paused){ resumeAfter=true; setPaused(true); } }
-const cardsShut=()=>["lesson","settings","proIntro","school","schoolAll","intro"].every(id=>$(id).hidden);
+const cardsShut=()=>["lesson","settings","proIntro","school","schoolAll","intro","help"].every(id=>$(id).hidden);
 function letGo(){ if(resumeAfter&&cardsShut()){ resumeAfter=false; setPaused(false); } }
+/* ---------- "How it works" guide: what every part of the screen is ---------- */
+const HELP=[
+ ["The basics",[
+  ["\uD83D\uDCB5","Your money",`<p>This is all your pretend money: the cash you have plus what your shares are worth right now.</p><p>You start with <b>$10,000</b>. While you own shares, this number goes up and down with the price.</p>`],
+  ["\uD83D\uDD58","The clock and the trading day",`<p>The market opens at <b>9:30 AM</b> and closes at <b>4:00 PM</b>, just like the real stock market.</p><p>One minute in the game takes one second for you, so a whole day takes about 6 and a half minutes. In the last 15 minutes the clock blinks.</p>`],
+  ["\u23EF\uFE0F","Play, Pause, and speed",`<p><b>Pause</b> freezes the market. Nothing moves until you tap <b>Play</b>.</p><p>The <b>1×</b> button speeds the market up to 2× or 3×. Tap it again to go back.</p>`],
+  ["\uD83C\uDFE2","The Tiny Market",`<p>One price made from six made-up companies together: Sloth Mattress, Pizza Rocket, Moon Mining, RoboPup, Glow Soda, and Pixel Forge.</p><p>When the companies do well, the Tiny Market goes up. When they do badly, it goes down.</p><p>This is like a real <b>index fund</b>, which lets people buy a small piece of many companies at once. In this game it swings extra hard during the day, so there's more to watch.</p>`],
+  ["\uD83D\uDCC8","The chart",`<p>The line shows the price over time. The left side is earlier and the right side is now.</p><p>The faded gray part on the far left is yesterday.</p><p>The dotted line and the colored tag on the right show the price right now. <b class="up">Green</b> means it's higher than when the market opened this morning. <b class="down">Red</b> means it's lower.</p>`],
+  ["\uD83D\uDCF0","News",`<p>Headlines about the six companies. <b class="up">Good news</b> usually pushes prices up. <b class="down">Bad news</b> usually pulls them down.</p><p><b>BREAKING</b> means big news that can move the price a lot, fast.</p><p>The news is made up, but real prices react to real news the same way.</p>`],
+  ["\uD83D\uDFE2","BUY and SELL",`<p><b class="up">BUY</b> gets you 10 shares at the price right now. A share is a tiny piece of the market.</p><p><b class="down">SELL</b> sells all 10 at the price right now.</p><p>You make or lose the difference, times 10:</p><p class="ex">Buy at $100.00, sell at $103.00<br>$3.00 × 10 shares = <span class="up">+$30.00</span></p>`],
+  ["\uD83D\uDFE8","The yellow line",`<p>After you buy, a yellow line shows the price you paid.</p><p>If the price is <b>above</b> the yellow line, selling now makes money. If it's <b>below</b>, selling now loses money.</p>`],
+  ["\uD83D\uDD14","4:00 PM: the market closes",`<p>Day traders don't keep shares overnight, because prices can jump while the market is closed.</p><p>So anything you still own at 4:00 is sold for you. Then a card shows how your day went, and the next day starts when you're ready.</p>`],
+  ["\uD83C\uDFAF","Goals, stars, ranks, and streaks",`<p>Each day has one goal at the top. Finish it to earn a \u2B50 star.</p><p>Stars raise your rank: Rookie, Trader, Hot Shot, Shark, Big Bull, and Legend.</p><p>\uD83D\uDD25 counts how many trades in a row you've won. A losing trade resets it.</p>`],
+  ["\uD83D\uDCD8","Trading School",`<p>Seven short lessons on real tricks traders use. Each lesson adds a tool to your chart and gives you a task to try it.</p><p>Finish the task to unlock the next lesson. Tap the goal bar to read the lesson you're on. <b>Settings › Trading School</b> lists every lesson.</p>`],
+  ["\uD83D\uDCAC","The coach line",`<p>The words under the chart tell you what your tools are showing right now, like "Uptrend" or "Near the green floor."</p><p>It's a hint, not a promise. Nobody knows for sure where a price will go next.</p>`],
+  ["\u2753","The \"You lost money\" card",`<p>After a sale that loses money, a card shows what you paid, what you sold for, and the most likely reason it went wrong, plus a tip.</p><p>Tap <b>+ Why so much?</b> to see the math. <b>Dismiss</b> turns the cards off. You can turn them back on in Settings.</p>`],
+ ]],
+ ["Chart tools",[
+  ["\uD83D\uDFE3","Purple line: the moving average",`<p>The average price of the last 30 minutes. It moves slowly and smooths out the wiggles, so you can see which way the price is heading.</p><p>Price above the purple line = an <b>uptrend</b>. Below it = a <b>downtrend</b>.</p>`,"trend"],
+  ["\uD83E\uDDF1","Floor and ceiling: support and resistance",`<p>The <b class="up">green floor</b> is the lowest price of the last hour. The <b class="down">red ceiling</b> is the highest.</p><p>Prices often bounce up off the floor and turn down at the ceiling. When the price breaks through one, it often keeps going. That's a <b>breakout</b>.</p>`,"levels"],
+  ["\uD83C\uDFAF","Take-profit and stop-loss",`<p>Every buy gets two lines that sell for you automatically.</p><p><b class="up">Take-profit</b> sells when you're up 3%. <b class="down">Stop-loss</b> sells if you're down 2%.</p><p class="ex">Buy at $100.00: take-profit sells at $103.00, stop-loss sells at $98.00</p><p>Your wins are bigger than your losses, so you can be wrong sometimes and still come out ahead.</p>`,"exits"],
+  ["\uD83D\uDD6F\uFE0F","Candlesticks",`<p>Each candle is 5 minutes. A <b class="up">green</b> candle means the price went up in those 5 minutes. <b class="down">Red</b> means it went down.</p><p>The thick part shows where the price started and ended. The thin lines (wicks) show the highest and lowest price.</p><p>The <b>Line / Candles</b> button on the chart switches between the two.</p>`,"candles"],
+ ]],
+ ["Pro mode (in Settings)",[
+  ["\uD83D\uDDC2\uFE0F","Company tabs",`<p>Pro mode lets you trade all six companies one by one instead of the Tiny Market.</p><p>Each tab shows the price and how much it changed since the morning. A yellow underline means you own some. A tab flashes when it has news.</p><p>Each company has a risk label: <b>calm</b> moves a little, <b>medium</b> more, and <b>wild</b> makes big jumps.</p>`],
+  ["\uD83D\uDD22","Shares: 1, 10, 100, or Max",`<p>Pick how many shares each BUY or SELL uses. <b>Max</b> buys as many as your cash allows, or sells all you own.</p><p>More shares means bigger wins <b>and</b> bigger losses.</p>`],
+  ["\uD83D\uDCB0","Average price paid",`<p>If you buy more of a company at a different price, the yellow line shows your <b>average</b> price for all your shares.</p><p class="ex">10 shares at $40 + 10 shares at $50<br>= 20 shares, average $45</p>`],
+  ["\uD83D\uDEE1\uFE0F","Stop-loss (Pro)",`<p>Pick Off, −3%, −5%, or −10%. If the price falls that far below what you paid, your shares are sold for you, even while you're playing Simple mode.</p>`],
+  ["\uD83C\uDF19","Keeping shares overnight",`<p>In Pro mode your shares stay yours after 4:00. The next morning the price can open higher or lower than it closed. That's called a <b>gap</b>, and a dashed "open" line marks it on the chart.</p>`],
+  ["\uD83D\uDCCA","Volume bars and price labels",`<p>The small bars at the bottom of the Pro chart are <b>volume</b>: how much trading happened. They get tall when news comes out.</p><p>The numbers on the right side are price levels, so you can read how high or low the price went.</p>`],
+  ["\uD83D\uDD17","One market, two wallets",`<p>Simple and Pro use the same market: same companies, same prices, same clock. Each mode has its own money and shares, and you can only sell shares in the mode that bought them.</p>`],
+ ]],
+];
+function showHelp(){
+  const box=$("helpList"); box.innerHTML="";
+  HELP.forEach(([group,items],gi)=>{
+    const h=document.createElement("h3"); h.textContent=group; box.append(h);
+    items.forEach(([ic,title,body,lid],ii)=>{
+      const d=document.createElement("details"), li=lid?LESSONS.findIndex(l=>l.id===lid):-1, locked=lid&&!known(lid);
+      if(gi===0&&ii===0) d.open=true;
+      d.innerHTML=`<summary><span class="ic" aria-hidden="true">${ic}</span><span class="tt">${title}</span>${locked?`<span class="lk">Lesson ${li+1}</span>`:""}</summary><div class="bd">${body}${locked?`<p class="soon">You'll unlock this tool in Trading School lesson ${li+1}.</p>`:""}</div>`;
+      box.append(d);
+    });
+  });
+  holdOn(); $("help").hidden=false; try{$("help").querySelector(".card").scrollTop=0;}catch(e){}
+}
 let schoolBack=null;
 function showSchool(i,fresh){
   const l=LESSONS[i];
@@ -1118,6 +1190,8 @@ $("restart").onclick=()=>{
   render(); draw(true); paused=false; startLoop(); toast("Fresh start: $10,000");
 };
 $("openSettings").onclick=openSettings;
+$("openHelp").onclick=showHelp;
+$("helpDone").onclick=()=>{ $("help").hidden=true; letGo(); };
 $("settingsDone").onclick=()=>{ closeSettings(); if($("proIntro").hidden&&afterLesson){const f=afterLesson; afterLesson=null; f();} };
 $("optExplain").onchange=e=>{ opts.explain=e.target.checked; persist(); toast(opts.explain?"Loss tips are on":"Loss tips are off"); };
 $("lessonDismiss").onclick=()=>closeLesson(true);
@@ -1133,6 +1207,7 @@ window.addEventListener("resize",()=>draw(true));
 // Android Back button: close whatever is open, or pause; returning false lets the app close.
 window.appBack=()=>{
   if(!$("lesson").hidden){closeLesson(false);return true;}
+  if(!$("help").hidden){$("helpDone").click();return true;}
   if(!$("school").hidden){closeSchool();return true;}
   if(!$("schoolAll").hidden){$("schoolAllDone").click();return true;}
   if(!$("settings").hidden){$("settingsDone").click();return true;}
@@ -1145,7 +1220,7 @@ const MK=new Set(["st","min","phase","news","newsBig","used","gapNext"]);
 window.__tt={makeGoal,get s(){return new Proxy(s,{get:(g,k)=>MK.has(k)?M[k]:g[k],set:(g,k,v)=>{(MK.has(k)?M:g)[k]=v;return true;}});},get m(){return M},
   fresh:()=>{newMarket(); games={simple:null,pro:null}; school={n:0,seen:-1}; newGame(mode); lastP=null; buildTabs(); render(); draw(true);},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
   act,buyShares,sellShares,setQty:q=>{qtyMode=String(q);},nextDay,closeMarket,select:t=>{s.sel=t;},setMode,setPaused,stopLoop,draw,render,
-  closeLesson,openSettings,closeSettings,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,ind,LESSONS,showSchool,closeSchool,get school(){return school},setSchool:(n,seen)=>{school={n,seen:seen??n};},
+  closeLesson,openSettings,closeSettings,showHelp,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,ind,LESSONS,showSchool,closeSchool,get school(){return school},setSchool:(n,seen)=>{school={n,seen:seen??n};},
   get own(){const t=Object.keys(s.hold)[0];return t?Object.assign({t},s.hold[t]):null;}};
 
 load(); buildTabs(); render(); draw(true); requestAnimationFrame(frame);
