@@ -18,7 +18,9 @@ Watch the live price bars move. Tap BUY when you think the price will go up. Tap
 • Three made-up companies: calm Sloth Mattress, Pizza Rocket, and wild Moon Mining
 • Funny news headlines that make prices jump or crash
 • Lose money? A simple tip explains why and how to do better (you can turn tips off in Settings)
-• Each trading day takes about six minutes, then you see what you made
+• A new goal every day: finish it to earn stars and rank up from Rookie to Legend
+• Win streaks, confetti, sound effects, and BREAKING news
+• Each trading day takes about six minutes, or speed it up to 2x or 3x
 • Ready for more? Pro mode adds six companies, share amounts, owning several at once, stop-loss, and overnight holding
 • Pause any time. Plays offline. No ads, no accounts, no real money, no data collected.
 

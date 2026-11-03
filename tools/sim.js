@@ -34,7 +34,7 @@ let pending=[]; function setTimeout2(f,ticks){pending.push({f,at:T.s.min+ticks})
 const chaserWrap=m=>{ pending=pending.filter(p=>{if(m>=p.at){p.f();return false;}return true;}); chaser(m); };
 const stats=(name,f,n)=>{T.newGame(); const r=[]; for(let i=0;i<n;i++){held=null;pending=[];r.push(day(f));} r.sort((a,b)=>a-b);
   console.log(name.padEnd(14),"worst day",(r[0]*100).toFixed(0)+"%","median",(r[n>>1]*100).toFixed(1)+"%","best",(r[n-1]*100).toFixed(0)+"%");};
-T.newGame(); day(none); console.log("day-end card shown:",!$("closed").hidden,"text:",$("closedT").textContent);
+T.newGame(); while(T.s.phase==="open") T.tick(); console.log("day-end card shown:",!$("closed").hidden,"text:",$("closedT").textContent,"|",$("closedGoal").innerHTML.replace(/&#\d+;/g,"*")); T.nextDay();
 stats("cash only",none,20); stats("hold Pizza",holdAll,300); stats("random taps",random,300); stats("news chaser",chaserWrap,300);
 // rule checks
 T.newGame(); T.select("PZZA"); T.act(); const o=T.own;
@@ -58,3 +58,20 @@ while(T.s.phase==="open") T.tick(); console.log("pro keeps shares overnight:",Ob
 T.nextDay(); T.s.hold.ROBO.stop=5; const c=T.s.hold.ROBO.cost; T.s.st.ROBO.p=Math.round(c*0.94*100)/100; T.tick();
 console.log("stop-loss sells automatically:",!T.s.hold.ROBO);
 T.setMode("simple"); console.log("simple mode money kept separately:",T.list().length===3);
+
+// ---- goals, stars, streaks
+T.newGame(); const st0=T.s.stars; T.s.goal={k:"wins",n:2,prog:0,done:false};
+const win=()=>{ T.select("PZZA"); T.act(); T.s.st.PZZA.p=Math.round(T.own.cost*102)/100; T.act(); };
+win(); win();
+console.log("two winning trades finish the goal and earn a star:",T.s.goal.done&&T.s.stars===st0+1);
+console.log("streak counts wins in a row:",T.s.streak===2);
+T.select("PZZA"); T.act(); T.s.st.PZZA.p=Math.round(T.own.cost*97)/100; T.act();
+console.log("a losing trade resets the streak:",T.s.streak===0);
+T.s.goal={k:"profit",n:100,prog:0,done:false}; T.select("SLTH"); T.act(); T.s.st.SLTH.p=Math.round(T.own.cost*105)/100; T.tick();
+console.log("profit goal fills while you hold a winner:",T.s.goal.done);
+console.log("ranks: 0 stars Rookie, 3 Trader, 40 Legend:",T.rankOf(0)===0&&T.rankOf(3)===1&&T.rankOf(40)===5);
+while(T.s.phase==="open") T.tick(); T.nextDay();
+console.log("new day brings a new goal and keeps stars:",!T.s.goal.done&&T.s.stars===st0+2);
+T.setMode("pro"); T.newGame(); T.s.goal={k:"spread",n:3,prog:0,done:false};
+T.buyShares("ROBO",1); T.buyShares("GLOW",1); T.buyShares("PXLF",1);
+console.log("pro goal: own 3 companies at once:",T.s.goal.done);

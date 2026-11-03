@@ -75,6 +75,28 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   check("back in Simple mode with its own money and 3 tabs",await p.evaluate(()=>window.__tt.mode==="simple"&&document.querySelectorAll(".tab").length===3));
   await p.reload(); await wait(400);
   check("mode and both games survive a reload",await p.evaluate(()=>{const d=JSON.parse(localStorage.getItem("tinytrader.v4"));return d.mode==="simple"&&d.games.pro&&Object.keys(d.games.pro.hold).length===1;}));
+  // ---- stimulation: goal strip, speed, sounds, pop-ups, rank on the day card
+  check("goal strip shows a goal and stars",await p.evaluate(()=>document.getElementById("goalTxt").textContent.length>5&&document.getElementById("stars").textContent.startsWith("⭐")));
+  await p.evaluate(()=>window.__tt.setPaused(false));
+  const m0=await p.evaluate(()=>window.__tt.s.min); await wait(2100); const m1=await p.evaluate(()=>window.__tt.s.min);
+  await p.click("#speed"); await p.click("#speed"); await wait(150);
+  check("speed button goes to 3x",await p.evaluate(()=>window.__tt.opts.speed===3&&document.getElementById("speed").textContent==="3×"));
+  const m2=await p.evaluate(()=>window.__tt.s.min); await wait(2100); const m3=await p.evaluate(()=>window.__tt.s.min);
+  console.log(`   minutes in 2s: normal ${m1-m0}, 3x ${m3-m2}`);
+  check("3x speed runs about three times faster",(m3-m2)>=2*(m1-m0));
+  await p.click("#speed"); await wait(100);
+  check("speed wraps back to 1x",await p.evaluate(()=>window.__tt.opts.speed===1));
+  await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); if(!T.own) T.act(); const o=T.s.st[T.own.t]; o.p=Math.round(T.own.cost*103)/100;}); await p.click("#act"); await wait(250);
+  check("a winning sale floats the money up and counts the streak",await p.evaluate(()=>!!document.querySelector(".pop.up")&&window.__tt.s.streak>=1));
+  await p.click("#openSettings"); await wait(100);
+  check("Sounds switch starts on",await p.evaluate(()=>document.getElementById("optSound").checked));
+  await p.click("#optSound"); await p.click("#settingsDone"); await wait(100);
+  check("Sounds switch turns sounds off",await p.evaluate(()=>window.__tt.opts.sound===false));
+  await p.reload(); await wait(400);
+  check("speed and sound settings are remembered",await p.evaluate(()=>{const o=window.__tt.opts;return o.sound===false&&o.speed===1;}));
+  await p.evaluate(()=>{const T=window.__tt; T.setPaused(true); while(T.s.phase==="open") T.tick();}); await wait(200);
+  check("day-end card shows the goal and a rank",await p.evaluate(()=>/Goal (done|missed)/.test(document.getElementById("closedGoal").textContent)&&/Rookie|Trader|Hot Shot|Shark|Big Bull|Legend/.test(document.getElementById("closedRank").textContent)));
+  console.log("   rank box:",await p.evaluate(()=>document.getElementById("closedRank").textContent));
   check("no page errors",errs.length===0); if(errs.length) console.log(errs);
   await b.close(); process.exit(fails?1:0);
 })();

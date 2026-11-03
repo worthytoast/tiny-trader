@@ -113,9 +113,41 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .switch input:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .toast{position:fixed;left:50%;top:40%;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 16px;
   font-weight:800;font-size:16px;z-index:9;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
-@media (max-height:700px){.pro .worth{font-size:26px}.pro .chips button{padding:5px 0}.pro .duo .act{padding:8px 6px;font-size:19px}}
+.icon{padding:5px 9px;font-size:15px;line-height:1.1}
+.spd{min-width:40px;color:var(--hi)}
+.clock.urgent{color:var(--hi);animation:urg 1s infinite}
+@keyframes urg{50%{opacity:.45}}
+.worth.wu{animation:wu .7s} .worth.wd{animation:wd .7s}
+@keyframes wu{0%{color:var(--up)}} @keyframes wd{0%{color:var(--down)}}
+.pr.tu{animation:wu .6s} .pr.td{animation:wd .6s}
+.goal{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:13px;font-weight:800}
+.goal .gi{font-size:17px;flex:none}
+.goal .gm{flex:1;min-width:0}
+.goal .gt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.goal .gt small{color:var(--soft);font-weight:700;margin-left:5px}
+.bar{height:6px;background:var(--panel2);border-radius:99px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--hi);border-radius:99px;transition:width .4s}
+.goal.done{border-color:var(--up)} .goal.done .bar i{background:var(--up)}
+.goal.cheer{animation:gpop .9s}
+@keyframes gpop{30%{transform:scale(1.04);box-shadow:0 0 0 4px rgba(34,211,127,.35)}}
+.streak{color:#ff9d3a;flex:none}
+.stars{flex:none;color:var(--hi)}
+.news .tag.hot{background:var(--down);color:#fff;animation:urg .5s 4}
+.pop{position:fixed;transform:translate(-50%,0);font-family:var(--display);font-size:38px;z-index:8;pointer-events:none;white-space:nowrap;
+  text-shadow:0 3px 0 rgba(0,0,0,.45);animation:rise 1.5s ease-out forwards}
+@keyframes rise{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}15%{opacity:1;transform:translate(-50%,0) scale(1.15)}30%{transform:translate(-50%,-10px) scale(1)}100%{opacity:0;transform:translate(-50%,-90px)}}
+.edge{position:fixed;inset:0;pointer-events:none;z-index:7;opacity:0;box-shadow:inset 0 0 70px 10px rgba(255,90,85,.7)}
+.edge.hit{animation:hit .7s}
+@keyframes hit{20%{opacity:1}}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:8}
+.act.glow{animation:glow 1.4s infinite}
+@keyframes glow{50%{box-shadow:0 0 0 4px rgba(34,211,127,.45),0 0 24px rgba(34,211,127,.55)}}
+.rank{background:var(--panel2);border-radius:12px;padding:10px 12px;margin:12px 0 4px;font-weight:700}
+.rank b{font-family:var(--display);font-weight:400;font-size:22px;color:var(--hi);display:block}
+.rank small{color:var(--soft);display:block;margin-top:2px}
+@media (max-height:700px){.goal{padding:4px 10px}.pro .worth{font-size:26px}.pro .chips button{padding:5px 0}.pro .duo .act{padding:8px 6px;font-size:19px}}
 @media (max-height:640px){.worth{font-size:28px}.act{padding:12px 10px;font-size:26px}.app{gap:9px}}
-@media (prefers-reduced-motion:reduce){.tab.ping,.news.flash{animation:none}}
+@media (prefers-reduced-motion:reduce){.tab.ping,.news.flash,.clock.urgent,.act.glow,.goal.cheer,.news .tag.hot,.edge.hit{animation:none}}
 </style>
 
 <div class="app">
@@ -127,9 +159,11 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     </div>
     <div class="right">
       <span class="clock num" id="clock">9:30 AM</span>
-      <div class="btns"><button class="small" id="pause">Pause</button><button class="small" id="openSettings">Settings</button></div>
+      <div class="btns"><button class="small" id="pause">Pause</button><button class="small spd" id="speed" aria-label="Speed">1&times;</button><button class="small icon" id="openSettings" aria-label="Settings">&#9881;&#xFE0E;</button></div>
     </div>
   </div>
+
+  <div class="goal" id="goal"><span class="gi" aria-hidden="true">&#127919;</span><div class="gm"><div class="gt" id="goalTxt"></div><div class="bar"><i id="goalBar"></i></div></div><span class="streak" id="streak" hidden></span><span class="stars num" id="stars"></span></div>
 
   <div class="tabs" id="tabs"></div>
 
@@ -138,7 +172,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <canvas id="chart" aria-label="Live price chart"></canvas>
   </div>
 
-  <div class="news" id="news"><span class="tag">NEWS</span><p id="newsTxt">The market is open!</p></div>
+  <div class="news" id="news"><span class="tag" id="newsTag">NEWS</span><p id="newsTxt">The market is open!</p></div>
 
   <div class="status num" id="status"></div>
 
@@ -166,6 +200,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
       <li>Watch the price bars move.</li>
       <li>Tap <b class="up">BUY</b> when you think it will go up.</li>
       <li>Tap <b class="down">SELL</b> to cash out. Sell higher than you bought to make money!</li>
+      <li>Finish the daily &#127919; goal to earn &#11088; stars and rank up.</li>
     </ol>
     <button class="go" id="introGo">Start trading</button>
     <p class="fine">Want more? Try Pro mode in Settings.<br>Just a game. The companies, news, and prices are made up.</p>
@@ -193,6 +228,8 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <p id="closedVerb">Today you made</p>
     <div class="big num" id="closedPL"></div>
     <p>You now have <b class="num" id="closedWorth"></b></p>
+    <p id="closedGoal"></p>
+    <div class="rank" id="closedRank"></div>
     <p class="fine" id="closedNote"></p>
     <button class="go" id="nextDay">Next day</button>
   </div>
@@ -233,12 +270,18 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
       <span>Explain when I lose money<small>After a sale that loses money, show why and how to make money.</small></span>
       <input type="checkbox" id="optExplain" role="switch">
     </label>
+    <label class="setting switch" for="optSound">
+      <span>Sounds<small>Beeps for buying, selling, news, and goals.</small></span>
+      <input type="checkbox" id="optSound" role="switch">
+    </label>
     <button class="go" id="settingsDone">Done</button>
     <button class="ghost" id="restart">Start over with $10,000</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="edge" id="edge"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
 
 <script>
 (()=>{
@@ -285,7 +328,7 @@ const clockStr=m=>{const t=570+m,h=Math.floor(t/60),mm=t%60,h12=((h+11)%12)+1;re
 /* ---------- state ----------
    games.simple / games.pro: each mode has its own money.
    s.hold: {TICKER: {sh, cost, at, bad, good, stop}}. Simple mode holds at most one company, all-in. */
-let games={simple:null,pro:null}, mode="simple", s=null, best={simple:null,pro:null}, seenIntro=false, seenPro=false, opts={explain:true};
+let games={simple:null,pro:null}, mode="simple", s=null, best={simple:null,pro:null}, seenIntro=false, seenPro=false, opts={explain:true,sound:true,speed:1};
 const isPro=()=>mode==="pro";
 const list=()=>isPro()?ALL:ALL.filter(x=>x.simple);
 
@@ -297,7 +340,7 @@ function newGame(m){
 }
 function startDay(g){
   g=g||s;
-  g.min=0; g.phase="open"; g.news="The market is open!";
+  g.min=0; g.phase="open"; g.news="The market is open!"; g.newsBig=false;
   for(const t in g.st){
     const x=byT[t], o=g.st[t];
     if(o.c.length){ o.p=r2(Math.max(.5,o.p*Math.exp(gauss()*x.vol*.3))); for(const c of o.c) c.y=1; }   // overnight gap
@@ -310,6 +353,7 @@ function startDay(g){
     o.mom=0; o.open=o.p;
   }
   g.gapNext=true; g.dayStart=worthOf(g);
+  g.wins=0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g);
 }
 function worthOf(g){let v=g.cash;for(const t in g.hold) v+=g.hold[t].sh*g.st[t].p;return v;}
 const worth=()=>worthOf(s);
@@ -329,8 +373,67 @@ function load(){
   }catch(e){}
   if(!games[mode]) newGame(mode);
   s=games[mode];
+  for(const m in games){ const g=games[m]; if(g&&!g.goal){ g.wins=g.wins||0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); } }
 }
 function persist(){try{localStorage.setItem(KEY,JSON.stringify({games,mode,best,seenIntro,seenPro,opts}));}catch(e){}}
+
+/* ---------- daily goals, stars, ranks, streaks ---------- */
+const RANKS=[[0,"Rookie"],[3,"Trader"],[8,"Hot Shot"],[15,"Shark"],[25,"Big Bull"],[40,"Legend"]];
+const rankOf=n=>{let i=0;while(i+1<RANKS.length&&n>=RANKS[i+1][0])i++;return i;};
+function makeGoal(g){
+  const pro=!!g.st.ROBO, ts=Object.keys(g.st), kinds=["profit","profit","wins","stock","quick"];
+  if(pro) kinds.push("spread");
+  const k=pick(kinds.filter(x=>x!==(g.goal&&g.goal.k)));
+  const goal={k,prog:0,done:false};
+  if(k==="profit") goal.n=Math.max(50,Math.round(g.dayStart*.01/50)*50);
+  else if(k==="wins") goal.n=pro?3:2;
+  else if(k==="spread") goal.n=3;
+  else goal.n=1;
+  if(k==="stock") goal.t=pick(ts);
+  g.goal=goal;
+}
+function goalText(g){
+  const o=g.goal; if(!o) return "";
+  if(o.k==="profit") return `Make ${fmt0.format(o.n)} today`;
+  if(o.k==="wins") return `Win ${o.n} trades today`;
+  if(o.k==="stock") return `Win a trade on ${byT[o.t].n}`;
+  if(o.k==="quick") return "Win a trade in 5 minutes or less";
+  return "Own 3 companies at the same time";
+}
+function goalProgText(g){
+  const o=g.goal;
+  if(o.k==="profit") return `${fmt0.format(Math.max(0,o.prog))} so far`;
+  if(o.n>1) return `${Math.min(o.prog,o.n)} of ${o.n}`;
+  return "";
+}
+// ev: {sell:true,t,pl,held} after a sale, {buy:true} after a buy, or nothing (each minute)
+function goalUpdate(ev){
+  const o=s.goal; if(!o||o.done) return;
+  const win=ev&&ev.sell&&ev.pl>0.004;
+  if(o.k==="profit") o.prog=Math.max(o.prog,worth()-s.dayStart);
+  else if(o.k==="wins"){ if(win) o.prog++; }
+  else if(o.k==="stock"){ if(win&&ev.t===o.t) o.prog=1; }
+  else if(o.k==="quick"){ if(win&&ev.held<=5) o.prog=1; }
+  else if(o.k==="spread") o.prog=Math.max(o.prog,owned().length);
+  if(o.prog>=o.n){
+    o.done=true; const before=rankOf(s.stars); s.stars++; persist();
+    const up=rankOf(s.stars)>before;
+    setTimeout(()=>{
+      toast(up?`Rank up: ${RANKS[rankOf(s.stars)][1]}!`:"Goal done! +1 star");
+      sfx(up?"rank":"goal"); confetti(up?140:80); buzz([20,40,20,40,60]);
+      const el=$("goal"); el.classList.remove("cheer"); void el.offsetWidth; el.classList.add("cheer");
+    },ev&&ev.sell?650:0);
+  }
+}
+function renderGoal(){
+  const o=s.goal; if(!o) return;
+  $("goal").classList.toggle("done",o.done);
+  const pt=o.done?"":goalProgText(s);
+  $("goalTxt").innerHTML=(o.done?"Goal done! &#11088;":goalText(s))+(pt?`<small>${pt}</small>`:"");
+  $("goalBar").style.width=(o.done?100:Math.max(0,Math.min(1,o.prog/o.n))*100)+"%";
+  $("stars").textContent="\u2B50 "+s.stars;
+  $("streak").hidden=s.streak<2; $("streak").textContent="\uD83D\uDD25"+s.streak;
+}
 
 /* ---------- market engine: one tick = one market minute ---------- */
 function vol(){return Math.round(20+Math.random()*60);}
@@ -348,11 +451,12 @@ function tick(){
   s.min++;
   let target=null, shock=0, market=gauss()*.0006, news=false;
   const r=Math.random();
-  if(isPro()&&r<.0035){ const good=Math.random()<.5; market+=good?.012:-.014; s.news=pick(good?MKT_GOOD:MKT_BAD); news=true; }
+  let big=false;
+  if(isPro()&&r<.0035){ const good=Math.random()<.5; market+=good?.012:-.014; s.news=pick(good?MKT_GOOD:MKT_BAD); news=true; big=true; }
   else if(r<(isPro()?.026:.02)){
     target=pick(list()); const good=Math.random()<.52;
     const size=target.risk==="wild"?.05+Math.random()*.1:target.risk==="calm"?.015+Math.random()*.025:.03+Math.random()*.05;
-    shock=(good?1:-1)*size; s.news=headlineFor(target,good); news=true;
+    shock=(good?1:-1)*size; s.news=headlineFor(target,good); news=true; big=size>=.06;
     const h=s.hold[target.t]; if(h) h[good?"good":"bad"]=s.news;
   }
   for(const t in s.st){
@@ -365,8 +469,10 @@ function tick(){
     o.p=r2(np); c.h=Math.max(c.h,o.p); c.l=Math.min(c.l,o.p); c.c=o.p; c.v+=vol()*(x===target?6:1);
   }
   s.gapNext=false;
-  if(news) newsArrived(target&&target.t);
+  if(news){ s.newsBig=big; newsArrived(target&&target.t,big); }
   if(isPro()) checkStops();
+  goalUpdate();
+  if(s.min===MINS-15){ toast(isPro()?"15 minutes until 4:00!":"15 minutes left! We sell for you at 4:00"); sfx("warn"); buzz([30,60,30]); }
   if(s.min%CANDLE===0) persist();
   if(s.min>=MINS) closeMarket();
 }
@@ -389,14 +495,21 @@ function buyShares(t,q){
   if(q<1) return toast("Not enough cash");
   const h=s.hold[t]||(s.hold[t]={sh:0,cost:0,at:s.min,stop:0});
   h.cost=(h.cost*h.sh+q*p)/(h.sh+q); h.sh+=q; h.at=s.min; s.cash=r2(s.cash-q*p);
-  persist(); toast(`Bought ${q} ${byT[t].n} at ${money(p)}`); buzz(15); render();
+  persist(); toast(`Bought ${q} ${byT[t].n} at ${money(p)}`); buzz(15); sfx("buy"); goalUpdate({buy:true}); render();
 }
 function sellShares(t,q,auto){
   const h=s.hold[t]; if(!h) return 0;
   q=Math.min(q,h.sh); if(q<1) return 0;
   const p=price(t), got=r2(q*p), pl=got-q*h.cost, snap=Object.assign({},h,{t,q});
   h.sh-=q; if(!h.sh) delete s.hold[t]; s.cash=r2(s.cash+got); persist();
-  if(!auto){toast(pl>=0?`You made ${signed(pl)}!`:`You lost ${money(-pl)}`); buzz(pl>=0?[15,60,15]:40);}
+  if(pl>0.004){ s.wins=(s.wins||0)+1; s.streak=(s.streak||0)+1; } else if(pl<-0.004) s.streak=0;
+  popMoney(pl);
+  if(pl>0.004){ sfx("win"); confetti(Math.min(90,20+Math.round(pl/15))); buzz([15,60,15]);
+    if([3,5,10,15,20].includes(s.streak)) setTimeout(()=>toast(`🔥 ${s.streak} wins in a row!`),900); }
+  else if(pl<-0.004){ sfx("lose"); hurt(); buzz(60); }
+  else sfx("buy");
+  goalUpdate({sell:true,t,pl,held:s.min-(snap.at??s.min)});
+  persist();
   render();
   if(pl<-0.004&&opts.explain) showLesson(snap,p,-pl,auto);
   return pl;
@@ -419,6 +532,7 @@ function closeMarket(){
   const w=worth();
   if(best[mode]===null||w>best[mode]) best[mode]=w;
   persist();
+  sfx("bell"); if(worth()>s.dayStart+0.004) setTimeout(()=>confetti(110),300);
   fillClosedCard(isPro()
     ? (owned().length?"Your shares stay yours overnight. Prices can jump before tomorrow's open.":"Best ever in Pro mode: "+money(best.pro))
     : (auto?`At 4:00 we sold your ${auto} for you. Day traders always end the day in cash.`:"Best ever: "+money(best.simple)));
@@ -432,12 +546,19 @@ function fillClosedCard(note){
   $("closedPL").textContent=money(Math.abs(pl)); $("closedPL").className="big num "+cls(pl);
   $("closedWorth").textContent=money(w);
   $("closedNote").textContent=note;
+  const o=s.goal;
+  $("closedGoal").innerHTML=o&&o.done?`&#127919; Goal done: <b>${goalText(s)}</b>. You earned a &#11088;!`:`&#127919; Goal missed: ${goalText(s)}. New goal tomorrow!`;
+  const i=rankOf(s.stars), nx=RANKS[i+1];
+  $("closedRank").innerHTML=`<small>${isPro()?"Pro rank":"Your rank"}</small><b>${RANKS[i][1]}</b>&#11088; ${s.stars} star${s.stars===1?"":"s"}`+
+    (nx?`<small>${nx[0]-s.stars} more to ${nx[1]}</small>`:`<small>Top rank. You're a legend!</small>`);
 }
 function nextDay(){ s.day++; startDay(); persist(); $("closed").hidden=true; render(); draw(true); paused=false; startLoop(); }
 
 /* ---------- screen ---------- */
-function newsArrived(t){
+function newsArrived(t,big){
   const el=$("news"); el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  const tag=$("newsTag"); tag.classList.remove("hot"); void tag.offsetWidth;
+  sfx(t&&s.hold[t]?"alert":"news");
   if(t&&t!==s.sel){const b=document.querySelector(`.tab[data-t="${t}"]`); if(b){b.classList.remove("ping"); void b.offsetWidth; b.classList.add("ping");}}
   buzz(8);
 }
@@ -455,9 +576,13 @@ function render(){
   const pro=isPro(), w=worth(), open=s.phase==="open";
   if(!s.st[s.sel]) s.sel=Object.keys(s.st)[0];
   $("proBadge").hidden=!pro;
-  $("worth").textContent=money(w);
+  if(wShown===null){ wShown=w; $("worth").textContent=money(w); }
+  if(wTarget!==null&&Math.abs(w-wTarget)>0.004){ const e=$("worth"); e.classList.remove("wu","wd"); void e.offsetWidth; e.classList.add(w>wTarget?"wu":"wd"); }
+  wTarget=w;
   const td=w-(s.dayStart??w); $("today").hidden=!pro; $("today").textContent=signed(td)+" today"; $("today").className="today num "+cls(td);
   $("clock").textContent=open?clockStr(s.min):"Closed";
+  $("clock").classList.toggle("urgent",open&&s.min>=MINS-15);
+  $("speed").textContent=opts.speed+"×"; $("speed").hidden=!open;
   $("pause").textContent=paused?"Play":"Pause"; $("pause").hidden=!open;
   for(const b of document.querySelectorAll(".tab")){
     const t=b.dataset.t; if(!s.st[t]) continue;
@@ -468,9 +593,12 @@ function render(){
     b.setAttribute("aria-label",`${byT[t].n}, ${money(price(t))}, ${pct(ch)} today${s.hold[t]?", you own some":""}`);
   }
   const x=byT[s.sel], p=price(s.sel), ch=p/s.st[s.sel].open-1;
+  if(lastSel===s.sel&&lastP!==null&&p!==lastP){ const e=$("cPrice"); e.classList.remove("tu","td"); void e.offsetWidth; e.classList.add(p>lastP?"tu":"td"); }
+  lastSel=s.sel; lastP=p;
+  renderGoal();
   $("cName").innerHTML=`${x.n}<small>${x.risk}</small>`;
   $("cPrice").innerHTML=pro?`${money(p)} <span class="${clsP(ch)}">${pct(ch)}</span>`:money(p);
-  $("newsTxt").textContent=s.news;
+  $("newsTxt").textContent=s.news; $("newsTag").textContent=s.newsBig?"BREAKING":"NEWS"; $("newsTag").classList.toggle("hot",!!s.newsBig);
   $("act").hidden=pro; $("duo").hidden=!pro; $("qtyRow").hidden=!pro; $("stopRow").hidden=!pro||!s.hold[s.sel];
   if(pro) renderPro(p); else renderSimple(x);
 }
@@ -479,7 +607,7 @@ function renderSimple(x){
   if(t){
     const h=s.hold[t], pl=h.sh*(price(t)-h.cost);
     $("status").innerHTML=`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`;
-    a.className="act sell"; a.firstChild.nodeValue="SELL";
+    a.className="act sell"+(pl>0.004?" glow":""); a.firstChild.nodeValue="SELL";
     $("actTxt").textContent=t===s.sel?`Cash out: ${money(worth())}`:`Sell your ${byT[t].n}`;
   }else{
     $("status").textContent=s.phase==="open"?"Buy when you think it will go up":"";
@@ -502,6 +630,7 @@ function renderPro(p){
   $("buyTxt").textContent=qb>0?`${qb} for ${money(qb*p)}`:"not enough cash";
   $("sellTxt").textContent=h?`${qs} for ${money(qs*p)}`:"you own 0";
   $("buy").disabled=qb<1||!open; $("sell").disabled=!h||!open;
+  $("sell").classList.toggle("glow",!!h&&open&&p>h.cost*1.0005);
 }
 
 /* live candlestick chart; the newest bar glides toward the latest price between ticks */
@@ -513,7 +642,7 @@ function draw(snap){
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
   const pro=isPro(), o=s.st[s.sel]; if(!o) return;
   const p=o.p, live=s.phase==="open";
-  if(snap||disp===null) disp=p; else disp+=(p-disp)*.07;   // glide gently across each 1-second tick
+  if(snap||disp===null) disp=p; else disp+=(p-disp)*(1-Math.pow(.93,opts.speed));   // glide gently across each 1-second tick
   const n=Math.max(24,Math.min(pro?60:50,Math.floor((W-80)/(pro?7:8)))), cs=o.c.slice(-n);
   const L=10,R=W-78,T=50,B=H-(pro?24:14), VB=pro?B-(B-T)*.16:B;
   let lo=Infinity,hi=-Infinity; for(const c of cs){lo=Math.min(lo,c.l);hi=Math.max(hi,c.h);}
@@ -582,7 +711,7 @@ function closeLesson(turnOff){
 function syncSettings(){
   for(const b of document.querySelectorAll("#modeSeg button")) b.classList.toggle("on",b.dataset.m===mode);
   $("modeHelp").textContent=isPro()?"Six companies, share amounts, stop-loss, and overnight holding.":"Three companies and one big BUY / SELL button.";
-  $("optExplain").checked=opts.explain;
+  $("optExplain").checked=opts.explain; $("optSound").checked=opts.sound;
   $("restart").textContent=`Start ${isPro()?"Pro":"Simple"} mode over with $10,000`; $("restart").dataset.arm="";
 }
 function openSettings(){ holdOn(); syncSettings(); $("settings").hidden=false; }
@@ -596,15 +725,75 @@ function setMode(m){
   persist(); stopLoop(); mode=m; if(!games[m]) newGame(m); s=games[m];
   resumeAfter=s.phase==="open"; paused=true;   // resumes when Settings closes
   $("closed").hidden=true;
-  buildTabs(); render(); draw(true); syncSettings(); persist();
+  lastP=null; buildTabs(); render(); draw(true); syncSettings(); persist();
   if(s.phase==="closed"){ fillClosedCard(""); afterLesson=()=>{$("closed").hidden=false;}; }
 }
 
+/* ---------- effects: money pop-ups, confetti, red flash, sounds ---------- */
+let wShown=null, wTarget=null, lastP=null, lastSel=null;
+const calm=()=>{try{return !!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);}catch(e){return false;}};
+function popMoney(pl){
+  const b=$(isPro()?"sell":"act").getBoundingClientRect(), e=document.createElement("div");
+  e.className="pop num "+(pl>0.004?"up":pl<-0.004?"down":"flat"); e.textContent=signed(pl);
+  e.style.left=((b.left||0)+(b.width||300)/2)+"px"; e.style.top=Math.max(80,(b.top||400)-150)+"px";
+  document.body.append(e); setTimeout(()=>{e.remove&&e.remove();},1600);
+}
+function hurt(){ if(calm()) return; const e=$("edge"); e.classList.remove("hit"); void e.offsetWidth; e.classList.add("hit"); }
+const fx=$("fx"), fctx=fx.getContext("2d"); let parts=[], fxDirty=false;
+function confetti(n){
+  if(calm()) return;
+  const W=window.innerWidth||390, cols=["#22d37f","#ffd84a","#4d7cff","#b98cff","#ff9d3a","#eef2ff"];
+  for(let i=0;i<n;i++) parts.push({x:W/2+(Math.random()-.5)*W*.5,y:(window.innerHeight||800)*.55,vx:(Math.random()-.5)*11,vy:-6-Math.random()*11,
+    r:3+Math.random()*4,c:pick(cols),a:Math.random()*6,va:(Math.random()-.5)*.4,life:80+Math.random()*50});
+  if(parts.length>400) parts=parts.slice(-400);
+}
+function drawFx(){
+  if(!parts.length&&!fxDirty) return;
+  const dpr=Math.min(window.devicePixelRatio||1,2), W=window.innerWidth||390, H=window.innerHeight||800;
+  if(fx.width!==Math.round(W*dpr)||fx.height!==Math.round(H*dpr)){fx.width=Math.round(W*dpr);fx.height=Math.round(H*dpr);}
+  fctx.setTransform(dpr,0,0,dpr,0,0); fctx.clearRect(0,0,W,H);
+  for(const q of parts){ q.vy+=.32; q.vx*=.99; q.x+=q.vx; q.y+=q.vy; q.a+=q.va; q.life--;
+    fctx.save(); fctx.globalAlpha=Math.max(0,Math.min(1,q.life/30)); fctx.translate(q.x,q.y); fctx.rotate(q.a); fctx.fillStyle=q.c; fctx.fillRect(-q.r,-q.r/2,q.r*2,q.r); fctx.restore(); }
+  parts=parts.filter(q=>q.life>0&&q.y<H+20); fxDirty=parts.length>0;
+  if(!parts.length) fctx.clearRect(0,0,W,H);
+}
+let ac=null;
+function audio(){
+  if(!opts.sound) return null;
+  try{ if(!ac){ const A=window.AudioContext||window.webkitAudioContext; if(!A) return null; ac=new A(); } if(ac.state==="suspended") ac.resume(); }catch(e){ return null; }
+  return ac;
+}
+function tone(f,at,d,type,vol,f2){
+  const a=ac, t=a.currentTime+at, o=a.createOscillator(), g=a.createGain();
+  o.type=type||"sine"; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol||.12,t+.012); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+d+.03);
+}
+const SFX={
+  buy:()=>{tone(520,0,.07,"triangle",.14);tone(780,.06,.09,"triangle",.14);},
+  win:()=>{[784,988,1175,1568].forEach((f,i)=>tone(f,i*.07,.16,"square",.05));tone(1568,.28,.35,"triangle",.1);},
+  lose:()=>{tone(330,0,.32,"sawtooth",.06,140);},
+  news:()=>{tone(1320,0,.12,"sine",.07);},
+  alert:()=>{tone(1320,0,.1,"sine",.09);tone(1760,.11,.14,"sine",.09);},
+  warn:()=>{tone(880,0,.12,"square",.05);tone(880,.2,.12,"square",.05);tone(880,.4,.12,"square",.05);},
+  goal:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.2,"triangle",.13));},
+  rank:()=>{[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*.09,.22,"triangle",.13));},
+  bell:()=>{tone(1047,0,1.1,"sine",.12);tone(1568,0,.8,"sine",.05);tone(1047,.35,1.1,"sine",.1);},
+};
+function sfx(n){ if(!audio()) return; try{SFX[n]();}catch(e){} }
+const SPEEDS=[1,2,3];
+function setSpeed(v){ opts.speed=v; persist(); if(timer){ stopLoop(); startLoop(); } render();
+  toast(v===1?"Normal speed":`${v}\u00D7 speed: a day takes about ${Math.round(6.5/v)} minutes`); }
+
 /* ---------- loop ---------- */
 let paused=false, timer=null;
-function startLoop(){ if(timer||s.phase!=="open"||paused) return; timer=setInterval(()=>{tick(); render();},TICK_MS); }
+function startLoop(){ if(timer||s.phase!=="open"||paused) return; timer=setInterval(()=>{tick(); render();},TICK_MS/(opts.speed||1)); }
 function stopLoop(){ clearInterval(timer); timer=null; }
-function frame(){ draw(false); requestAnimationFrame(frame); }
+function frame(){
+  draw(false); drawFx();
+  if(wTarget!==null&&wShown!==wTarget){ const d=wTarget-wShown; wShown=Math.abs(d)<.01?wTarget:wShown+d*.14; $("worth").textContent=money(wShown); }
+  requestAnimationFrame(frame);
+}
 function setPaused(v){ paused=v; v?stopLoop():startLoop(); render(); }
 
 let tt=0; function toast(m){const e=$("toast");e.textContent=m;e.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>e.style.opacity=0,1600);}
@@ -618,13 +807,16 @@ document.querySelectorAll("#stopRow button").forEach(b=>b.onclick=()=>{const h=s
   toast(h.stop?`Stop-loss: sells if it drops ${h.stop}% below what you paid`:"Stop-loss off"); checkStops();});
 document.querySelectorAll("#modeSeg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 $("pause").onclick=()=>setPaused(!paused);
+$("speed").onclick=()=>setSpeed(SPEEDS[(SPEEDS.indexOf(opts.speed)+1)%SPEEDS.length]);
+$("optSound").onchange=e=>{ opts.sound=e.target.checked; persist(); if(opts.sound) sfx("buy"); toast(opts.sound?"Sounds on":"Sounds off"); };
+document.addEventListener("pointerdown",()=>audio(),{once:true});
 $("introGo").onclick=()=>{seenIntro=true;persist();$("intro").hidden=true;setPaused(false);};
 $("proIntroGo").onclick=()=>{$("proIntro").hidden=true; if(afterLesson){const f=afterLesson; afterLesson=null; f();} else letGo();};
 $("nextDay").onclick=nextDay;
 $("restart").onclick=()=>{
   const b=$("restart");
   if(!b.dataset.arm){ b.dataset.arm="1"; b.textContent="Tap again to start over"; return; }
-  newGame(mode); persist(); for(const id of ["settings","closed","lesson"]) $(id).hidden=true; afterLesson=null; resumeAfter=false;
+  newGame(mode); persist(); for(const id of ["settings","closed","lesson"]) $(id).hidden=true; lastP=null; afterLesson=null; resumeAfter=false;
   render(); draw(true); paused=false; startLoop(); toast("Fresh start: $10,000");
 };
 $("openSettings").onclick=openSettings;
@@ -646,7 +838,7 @@ window.appBack=()=>{
 };
 window.__tt={get s(){return s},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
   act,buyShares,sellShares,setQty:q=>{qtyMode=String(q);},nextDay,closeMarket,select:t=>{s.sel=t;},setMode,setPaused,stopLoop,draw,render,
-  closeLesson,openSettings,closeSettings,isPaused:()=>paused,
+  closeLesson,openSettings,closeSettings,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,
   get own(){const t=Object.keys(s.hold)[0];return t?Object.assign({t},s.hold[t]):null;}};
 
 load(); buildTabs(); render(); draw(true); requestAnimationFrame(frame);
