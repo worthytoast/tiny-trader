@@ -42,7 +42,7 @@ console.log("BUY uses (almost) all cash:",o&&T.s.cash<T.price("PZZA"));
 T.select("MOON"); console.log("button says SELL while holding:",document.getElementById("act").className.includes("sell"));
 T.act(); console.log("SELL cashes out everything (even when looking at another company):",!T.own&&Math.abs(T.s.cash-10000)<0.01);
 T.act(); for(let i=0;i<400;i++) T.tick(); console.log("auto-sold at 4:00:",!T.own,"note:",$("closedNote").textContent);
-console.log("save size (bytes):",store["tinytrader.v4"].length);
+console.log("save size (bytes):",store["tinytrader.v5"].length);
 
 // ---- Pro mode
 T.setMode("pro"); console.log("pro mode has 6 companies:",T.list().length===6, "own money:",T.worth()===10000);
@@ -75,3 +75,30 @@ console.log("new day brings a new goal and keeps stars:",!T.s.goal.done&&T.s.sta
 T.setMode("pro"); T.newGame(); T.s.goal={k:"spread",n:3,prog:0,done:false};
 T.buyShares("ROBO",1); T.buyShares("GLOW",1); T.buyShares("PXLF",1);
 console.log("pro goal: own 3 companies at once:",T.s.goal.done);
+
+// ---- one shared market (same prices in both modes; shares stay in the mode that bought them)
+T.setMode("simple"); T.fresh(); for(let i=0;i<20;i++) T.tick();
+const pz=T.price("PZZA"), clock=T.s.min;
+T.setMode("pro");
+console.log("same price for Pizza Rocket in both modes:",T.price("PZZA")===pz,"same clock:",T.s.min===clock);
+T.setMode("simple"); T.select("PZZA"); T.act(); const simpleShares=T.own.sh;
+T.setMode("pro"); const proCash=T.s.cash;
+console.log("Simple-mode shares are not in Pro:",!T.s.hold.PZZA);
+T.sellShares("PZZA",100,null);
+console.log("so Pro can't sell them:",T.s.cash===proCash);
+for(let i=0;i<30;i++) T.tick();
+T.setMode("simple");
+console.log("Simple still owns them after the market moved:",T.own&&T.own.sh===simpleShares,"clock moved for both:",T.s.min===clock+30);
+// crash Pizza Rocket: the price is the same everywhere, so there's no "doing well" place to sell it
+T.s.st.PZZA.p=Math.round(T.s.st.PZZA.p*70)/100; T.setMode("pro");
+console.log("a crash shows in both modes:",T.price("PZZA")===T.s.st.PZZA.p);
+T.setMode("simple"); const before=T.worth(); T.act();
+console.log("selling after the crash gets the crashed price:",Math.abs(T.s.cash-before)<0.01&&T.s.cash<10000);
+// a Pro stop-loss still works while you play Simple
+T.setMode("pro"); T.buyShares("ROBO",5); T.s.hold.ROBO.stop=3; const rc=T.s.hold.ROBO.cost;
+T.setMode("simple"); T.s.st.ROBO.p=Math.round(rc*90)/100; T.tick(); T.setMode("pro");
+console.log("Pro stop-loss sells while you're in Simple:",!T.s.hold.ROBO);
+// Simple shares are still sold at 4:00 if you're in Pro
+T.setMode("simple"); if(!T.own){T.select("SLTH"); T.act();} T.setMode("pro");
+while(T.s.phase==="open") T.tick(); T.setMode("simple");
+console.log("Simple shares sold at 4:00 even while in Pro:",!T.own);

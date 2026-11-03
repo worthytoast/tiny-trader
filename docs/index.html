@@ -221,6 +221,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <p>Pro mode has its own <b>$10,000</b> and more tools:</p>
     <ol class="steps" style="font-size:15px">
       <li><b>Six companies</b>, and news that can move the whole market.</li>
+      <li>It's the <b>same market</b> as Simple mode: same prices, same clock. Shares you buy here can only be sold here.</li>
       <li>Pick <b>how many shares</b> to buy or sell, and own several companies at once.</li>
       <li><b>Stop-loss</b> sells for you if the price falls too far below what you paid.</li>
       <li>Your shares <b>stay yours overnight</b>. Prices can jump before the next open.</li>
@@ -270,7 +271,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="settingsT">
     <h2 id="settingsT">Settings</h2>
     <div class="setting">
-      <span>Game mode<small>Each mode keeps its own money.</small></span>
+      <span>Game mode<small>Each mode keeps its own money and shares.</small></span>
       <div class="seg" id="modeSeg"><button data-m="simple">Simple</button><button data-m="pro">Pro</button></div>
       <small id="modeHelp" style="margin-top:8px"></small>
     </div>
@@ -295,7 +296,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
-const START=10000, MINS=390, CANDLE=5, TICK_MS=1000, KEEP=110, KEY="tinytrader.v4", OLDKEY="tinytrader.v3";
+const START=10000, MINS=390, CANDLE=5, TICK_MS=1000, KEEP=110, KEY="tinytrader.v5", KEY4="tinytrader.v4", OLDKEY="tinytrader.v3";
 
 const ALL=[
  {t:"SLTH",n:"Sloth Mattress",p:65,vol:.016,beta:.5,risk:"calm",simple:1,
@@ -340,56 +341,86 @@ let games={simple:null,pro:null}, mode="simple", s=null, best={simple:null,pro:n
 const isPro=()=>mode==="pro";
 const list=()=>isPro()?ALL:ALL.filter(x=>x.simple);
 
-function newGame(m){
-  const g={day:1,cash:START,hold:{},st:{},sel:"PZZA",used:{},min:0,phase:"open"};
-  for(const x of (m==="pro"?ALL:ALL.filter(x=>x.simple))) g.st[x.t]={p:x.p,c:[],mom:0,open:x.p};
-  games[m]=g; if(m===mode) s=g; startDay(g);
-  return g;
+/* One shared market, like the real thing: both modes see the same companies at the same prices on the same clock.
+   Each mode keeps its own money and shares, so shares bought in one mode can only be sold in that mode. */
+let M=null;
+const modeList=m=>m==="pro"?ALL:ALL.filter(x=>x.simple);
+function prefill(t){ // a few faded early-morning bars so the chart isn't empty at the open
+  const x=byT[t], o=M.st[t]; let p=o.p; const pre=[];
+  for(let i=0;i<24;i++){const c={o:p,h:p,l:p,c:p,v:0,y:1};for(let k=0;k<CANDLE;k++){p=step(x,p,0,0);c.h=Math.max(c.h,p);c.l=Math.min(c.l,p);c.c=p;c.v+=vol();}pre.push(c);}
+  const k=o.p/p; for(const c of pre){c.o*=k;c.h*=k;c.l*=k;c.c*=k;}
+  o.c=pre;
 }
-function startDay(g){
-  g=g||s;
-  g.min=0; g.phase="open"; g.news="The market is open!"; g.newsBig=false;
-  for(const t in g.st){
-    const x=byT[t], o=g.st[t];
+function newMarket(){
+  M={st:{},used:{}};
+  for(const x of ALL) M.st[x.t]={p:x.p,c:[],mom:0,open:x.p};
+  openMarket();
+}
+function openMarket(){
+  M.min=0; M.phase="open"; M.news=M.newsS="The market is open!"; M.newsBig=M.newsSBig=false;
+  for(const t in M.st){
+    const x=byT[t], o=M.st[t];
     if(o.c.length){ o.p=r2(Math.max(.5,o.p*Math.exp(gauss()*x.vol*.3))); for(const c of o.c) c.y=1; }   // overnight gap
-    else { // a few faded early-morning bars so the chart isn't empty at the open
-      let p=o.p; const pre=[];
-      for(let i=0;i<24;i++){const c={o:p,h:p,l:p,c:p,v:0,y:1};for(let k=0;k<CANDLE;k++){p=step(x,p,0,0);c.h=Math.max(c.h,p);c.l=Math.min(c.l,p);c.c=p;c.v+=vol();}pre.push(c);}
-      const k=o.p/p; for(const c of pre){c.o*=k;c.h*=k;c.l*=k;c.c*=k;}
-      o.c=pre;
-    }
+    else prefill(t);
     o.mom=0; o.open=o.p;
   }
-  g.gapNext=true; g.dayStart=worthOf(g);
-  g.wins=0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g);
+  M.gapNext=true;
 }
-function worthOf(g){let v=g.cash;for(const t in g.hold) v+=g.hold[t].sh*g.st[t].p;return v;}
+function newGame(m){
+  if(!M) newMarket();
+  const g={mode:m,day:1,cash:START,hold:{},sel:"PZZA",stars:0,streak:0};
+  games[m]=g; if(m===mode) s=g; startGameDay(g);
+  return g;
+}
+function startGameDay(g){ g.dayStart=worthOf(g); g.wins=0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); }
+function worthOf(g){let v=g.cash;for(const t in g.hold) v+=g.hold[t].sh*M.st[t].p;return v;}
 const worth=()=>worthOf(s);
-const price=t=>s.st[t].p;
+const price=t=>M.st[t].p;
 const owned=()=>Object.keys(s.hold);
 
 function load(){
+  const common=d=>{ mode=d.mode||"simple"; best=d.best||best; seenIntro=!!d.seenIntro; seenPro=!!d.seenPro; if(d.opts) opts=Object.assign(opts,d.opts); };
   try{
     const d=JSON.parse(localStorage.getItem(KEY)||"null");
-    if(d){ games=d.games||games; mode=d.mode||"simple"; best=d.best||best; seenIntro=!!d.seenIntro; seenPro=!!d.seenPro; if(d.opts) opts=Object.assign(opts,d.opts); }
-    else { // carry over a game from the previous version
-      const o=JSON.parse(localStorage.getItem(OLDKEY)||"null");
-      if(o&&o.s&&o.s.st){ const g=o.s; g.hold={}; if(g.own) g.hold[g.own.t]=g.own; delete g.own;
-        for(const t in g.st) for(const c of g.st[t].c) c.v=c.v||vol();
-        games.simple=g; best.simple=o.best??null; seenIntro=!!o.seenIntro; if(o.opts) opts=Object.assign(opts,o.opts); }
+    if(d&&d.market){ M=d.market; games=d.games||games; common(d); }
+    else {
+      const d4=JSON.parse(localStorage.getItem(KEY4)||"null");
+      if(d4){ games=d4.games||games; common(d4); }
+      else { // carry over a game from v3
+        const o=JSON.parse(localStorage.getItem(OLDKEY)||"null");
+        if(o&&o.s&&o.M.st){ const g=o.s; g.hold={}; if(g.own) g.hold[g.own.t]=g.own; delete g.own;
+          for(const t in g.st) for(const c of g.st[t].c) c.v=c.v||vol();
+          games.simple=g; best.simple=o.best??null; seenIntro=!!o.seenIntro; if(o.opts) opts=Object.assign(opts,o.opts); }
+      }
+      joinMarkets();
     }
-  }catch(e){}
+  }catch(e){ M=null; games={simple:null,pro:null}; }
+  if(!M) newMarket();
   if(!games[mode]) newGame(mode);
   s=games[mode];
-  for(const m in games){ const g=games[m]; if(g&&!g.goal){ g.wins=g.wins||0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); } }
+  for(const m in games){ const g=games[m]; if(!g) continue; g.mode=m; if(!g.goal){ g.wins=g.wins||0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); } }
 }
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({games,mode,best,seenIntro,seenPro,opts}));}catch(e){}}
+// Older versions gave each mode its own prices. Merge them into one market (the mode you were playing wins),
+// and cash out the other mode's shares at its old price so nobody gains or loses from the change.
+function joinMarkets(){
+  const main=games[mode]&&games[mode].st?games[mode]:[games.simple,games.pro].find(g=>g&&g.st); if(!main) return;
+  M={st:Object.assign({},main.st),min:main.min||0,phase:main.phase||"open",news:main.news||"The market is open!",newsBig:false,used:main.used||{},gapNext:false};
+  M.newsS=M.news; M.newsSBig=false;
+  for(const m in games){ const g=games[m]; if(g&&g.st) for(const t in g.st) if(!M.st[t]) M.st[t]=g.st[t]; }
+  for(const x of ALL) if(!M.st[x.t]){ M.st[x.t]={p:x.p,c:[],mom:0,open:x.p}; prefill(x.t); }
+  for(const m in games){ const g=games[m]; if(!g) continue;
+    if(g.st) for(const t in g.hold) if(g.st[t]!==M.st[t]){ g.cash=r2(g.cash+g.hold[t].sh*(g.st[t]?g.st[t].p:M.st[t].p)); delete g.hold[t]; }
+    for(const k of ["st","min","phase","news","newsBig","used","gapNext"]) delete g[k];
+    if(g!==main) g.dayStart=worthOf(g);
+  }
+}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({market:M,games,mode,best,seenIntro,seenPro,opts}));}catch(e){}}
 
 /* ---------- daily goals, stars, ranks, streaks ---------- */
 const RANKS=[[0,"Rookie"],[3,"Trader"],[8,"Hot Shot"],[15,"Shark"],[25,"Big Bull"],[40,"Legend"]];
 const rankOf=n=>{let i=0;while(i+1<RANKS.length&&n>=RANKS[i+1][0])i++;return i;};
 function makeGoal(g){
-  const pro=!!g.st.ROBO, ts=Object.keys(g.st), kinds=["profit","profit","wins","stock","quick"];
+  const pro=g.mode==="pro", ts=modeList(g.mode).map(x=>x.t), kinds=["profit","profit","wins","stock","quick"];
   if(pro) kinds.push("spread");
   const k=pick(kinds.filter(x=>x!==(g.goal&&g.goal.k)));
   const goal={k,prog:0,done:false};
@@ -415,17 +446,17 @@ function goalProgText(g){
   return "";
 }
 // ev: {sell:true,t,pl,held} after a sale, {buy:true} after a buy, or nothing (each minute)
-function goalUpdate(ev){
-  const o=s.goal; if(!o||o.done) return;
+function goalUpdate(ev,g){
+  g=g||s; const o=g.goal; if(!o||o.done) return;
   const win=ev&&ev.sell&&ev.pl>0.004;
-  if(o.k==="profit") o.prog=Math.max(o.prog,worth()-s.dayStart);
+  if(o.k==="profit") o.prog=Math.max(o.prog,worthOf(g)-g.dayStart);
   else if(o.k==="wins"){ if(win) o.prog++; }
   else if(o.k==="stock"){ if(win&&ev.t===o.t) o.prog=1; }
   else if(o.k==="quick"){ if(win&&ev.held<=5) o.prog=1; }
-  else if(o.k==="spread") o.prog=Math.max(o.prog,owned().length);
+  else if(o.k==="spread") o.prog=Math.max(o.prog,Object.keys(g.hold).length);
   if(o.prog>=o.n){
-    o.done=true; const before=rankOf(s.stars); s.stars++; persist();
-    const up=rankOf(s.stars)>before;
+    o.done=true; const before=rankOf(g.stars); g.stars++; persist();
+    const up=rankOf(g.stars)>before; if(g!==s) return;
     setTimeout(()=>{
       toast(up?`Rank up: ${RANKS[rankOf(s.stars)][1]}!`:"Goal done! +1 star");
       sfx(up?"rank":"goal"); confetti(up?140:80); buzz([20,40,20,40,60]);
@@ -447,49 +478,55 @@ function renderGoal(){
 function vol(){return Math.round(20+Math.random()*60);}
 function step(x,p,market,jolt){
   const sg=x.vol*.09;   // drag removed so up and down luck balance out
-  return Math.max(.5,p*Math.exp(market*x.beta+gauss()*sg-sg*sg/2)*(1+jolt));
+  const pull=-.00008*Math.log(p/x.p);   // prices slowly drift back toward each company's normal price, so the shared market never runs away
+  return Math.max(.5,p*Math.exp(market*x.beta+gauss()*sg-sg*sg/2+pull)*(1+jolt));
 }
 function headlineFor(x,good){
-  const key=x.t+(good?"+":"-"), l=good?x.good:x.bad, used=s.used[key]||(s.used[key]=[]);
+  const key=x.t+(good?"+":"-"), l=good?x.good:x.bad, used=M.used[key]||(M.used[key]=[]);
   let idx=[...l.keys()].filter(i=>!used.includes(i)); if(!idx.length){idx=[...l.keys()]; used.length=0;}
   const i=pick(idx); used.push(i); return l[i];
 }
 function tick(){
-  if(s.phase!=="open") return;
-  s.min++;
-  let target=null, shock=0, market=gauss()*.0006, news=false;
+  if(M.phase!=="open") return;
+  M.min++;
+  let target=null, shock=0, market=gauss()*.0006, news=false, big=false;
   const r=Math.random();
-  let big=false;
-  if(isPro()&&r<.0035){ const good=Math.random()<.5; market+=good?.012:-.014; s.news=pick(good?MKT_GOOD:MKT_BAD); news=true; big=true; }
-  else if(r<(isPro()?.026:.02)){
-    target=pick(list()); const good=Math.random()<.52;
+  if(r<.0035){ const good=Math.random()<.5; market+=good?.012:-.014; M.news=pick(good?MKT_GOOD:MKT_BAD); news=big=true; }
+  else if(r<.034){
+    target=pick(ALL); const good=Math.random()<.52;
     const size=target.risk==="wild"?.05+Math.random()*.1:target.risk==="calm"?.015+Math.random()*.025:.03+Math.random()*.05;
-    shock=(good?1:-1)*size; s.news=headlineFor(target,good); news=true; big=size>=.06;
-    const h=s.hold[target.t]; if(h) h[good?"good":"bad"]=s.news;
+    shock=(good?1:-1)*size; M.news=headlineFor(target,good); news=true; big=size>=.06;
+    for(const m in games){ const h=games[m]&&games[m].hold[target.t]; if(h) h[good?"good":"bad"]=M.news; }
   }
-  for(const t in s.st){
-    const x=byT[t], o=s.st[t];
+  for(const t in M.st){
+    const x=byT[t], o=M.st[t];
     let jolt=o.mom*.35; o.mom*=.65;
     if(x===target){jolt+=shock*.75; o.mom+=Math.random()<.3?-shock*.3:shock*.25;}   // news hits fast, then drifts on or fades back
     const np=step(x,o.p,market,jolt);
     let c=o.c[o.c.length-1];
-    if(c.y||(s.min-1)%CANDLE===0){c={o:o.p,h:o.p,l:o.p,c:o.p,v:0}; if(s.gapNext) c.gap=1; o.c.push(c); if(o.c.length>KEEP) o.c.shift();}
+    if(c.y||(M.min-1)%CANDLE===0){c={o:o.p,h:o.p,l:o.p,c:o.p,v:0}; if(M.gapNext) c.gap=1; o.c.push(c); if(o.c.length>KEEP) o.c.shift();}
     o.p=r2(np); c.h=Math.max(c.h,o.p); c.l=Math.min(c.l,o.p); c.c=o.p; c.v+=vol()*(x===target?6:1);
   }
-  s.gapNext=false;
-  if(news){ s.newsBig=big; newsArrived(target&&target.t,big); }
-  if(isPro()) checkStops();
+  M.gapNext=false;
+  if(news){
+    M.newsBig=big;
+    if(!target||target.simple){ M.newsS=M.news; M.newsSBig=big; }   // Simple mode only hears about its three companies and the whole market
+    if(isPro()||!target||target.simple) newsArrived(target&&target.t);
+  }
+  checkStops();
   goalUpdate();
-  if(s.min===MINS-15){ toast(isPro()?"15 minutes until 4:00!":"15 minutes left! We sell for you at 4:00"); sfx("warn"); buzz([30,60,30]); }
-  if(s.min%CANDLE===0) persist();
-  if(s.min>=MINS) closeMarket();
+  if(M.min===MINS-15){ toast(isPro()?"15 minutes until 4:00!":"15 minutes left! We sell for you at 4:00"); sfx("warn"); buzz([30,60,30]); }
+  if(M.min%CANDLE===0) persist();
+  if(M.min>=MINS) closeMarket();
 }
+// Stop-loss orders keep working even while you play Simple mode, like a real broker.
 function checkStops(){
-  for(const t of owned()){
-    const h=s.hold[t];
+  const g=games.pro; if(!g) return;
+  for(const t of Object.keys(g.hold)){
+    const h=g.hold[t];
     if(h&&h.stop&&price(t)<=h.cost*(1-h.stop/100)){
-      toast(`Stop-loss sold your ${byT[t].n}`);
-      sellShares(t,h.sh,"stop");
+      toast(g===s?`Stop-loss sold your ${byT[t].n}`:`Pro mode: stop-loss sold your ${byT[t].n}`);
+      sellShares(t,h.sh,"stop",g);
       if(!$("lesson").hidden) return;   // one card at a time
     }
   }
@@ -498,28 +535,31 @@ function checkStops(){
 /* ---------- trading ---------- */
 let qtyMode="10";
 function buyShares(t,q){
-  if(s.phase!=="open") return;
+  if(M.phase!=="open"||!list().some(x=>x.t===t)) return;
   const p=price(t), can=Math.floor(s.cash/p); q=Math.min(q,can);
   if(q<1) return toast("Not enough cash");
-  const h=s.hold[t]||(s.hold[t]={sh:0,cost:0,at:s.min,stop:0});
-  h.cost=(h.cost*h.sh+q*p)/(h.sh+q); h.sh+=q; h.at=s.min; s.cash=r2(s.cash-q*p);
+  const h=s.hold[t]||(s.hold[t]={sh:0,cost:0,at:M.min,stop:0});
+  h.cost=(h.cost*h.sh+q*p)/(h.sh+q); h.sh+=q; h.at=M.min; s.cash=r2(s.cash-q*p);
   persist(); toast(`Bought ${q} ${byT[t].n} at ${money(p)}`); buzz(15); sfx("buy"); goalUpdate({buy:true}); render();
 }
-function sellShares(t,q,auto){
-  const h=s.hold[t]; if(!h) return 0;
+// g is the game whose shares are sold (default: the mode on screen). A game can only sell its own shares.
+function sellShares(t,q,auto,g){
+  g=g||s; const me=g===s;
+  const h=g.hold[t]; if(!h) return 0;
   q=Math.min(q,h.sh); if(q<1) return 0;
   const p=price(t), got=r2(q*p), pl=got-q*h.cost, snap=Object.assign({},h,{t,q});
-  h.sh-=q; if(!h.sh) delete s.hold[t]; s.cash=r2(s.cash+got); persist();
-  if(pl>0.004){ s.wins=(s.wins||0)+1; s.streak=(s.streak||0)+1; } else if(pl<-0.004) s.streak=0;
-  popMoney(pl);
-  if(pl>0.004){ sfx("win"); confetti(Math.min(90,20+Math.round(pl/15))); buzz([15,60,15]);
-    if([3,5,10,15,20].includes(s.streak)) setTimeout(()=>toast(`🔥 ${s.streak} wins in a row!`),900); }
-  else if(pl<-0.004){ sfx("lose"); hurt(); buzz(60); }
-  else sfx("buy");
-  goalUpdate({sell:true,t,pl,held:s.min-(snap.at??s.min)});
+  h.sh-=q; if(!h.sh) delete g.hold[t]; g.cash=r2(g.cash+got);
+  if(pl>0.004){ g.wins=(g.wins||0)+1; g.streak=(g.streak||0)+1; } else if(pl<-0.004) g.streak=0;
+  if(me){
+    popMoney(pl);
+    if(pl>0.004){ sfx("win"); confetti(Math.min(90,20+Math.round(pl/15))); buzz([15,60,15]);
+      if([3,5,10,15,20].includes(g.streak)) setTimeout(()=>toast(`🔥 ${g.streak} wins in a row!`),900); }
+    else if(pl<-0.004){ sfx("lose"); hurt(); buzz(60); }
+    else sfx("buy");
+  }
+  goalUpdate({sell:true,t,pl,held:M.min-(snap.at??M.min)},g);
   persist();
-  render();
-  if(pl<-0.004&&opts.explain) showLesson(snap,p,-pl,auto);
+  if(me){ render(); if(pl<-0.004&&opts.explain) showLesson(snap,p,-pl,auto); }
   return pl;
 }
 // Simple mode: one button that puts everything in, or takes everything out
@@ -533,12 +573,12 @@ const proSellQty=()=>{const own=s.hold[s.sel]?.sh||0;return qtyMode==="max"?own:
 
 /* ---------- end of day ---------- */
 function closeMarket(){
-  s.phase="closed"; stopLoop();
+  M.phase="closed"; stopLoop();
   let auto=null;
-  if(!isPro()){ const t=owned()[0]; if(t){ auto=byT[t].n; sellShares(t,s.hold[t].sh,"close"); } }
-  for(const t in s.st){ const c=s.st[t].c; c[c.length-1].y=1; }
-  const w=worth();
-  if(best[mode]===null||w>best[mode]) best[mode]=w;
+  const sg=games.simple;   // Simple mode always ends the day in cash, even if you were playing Pro
+  if(sg){ const t=Object.keys(sg.hold)[0]; if(t){ if(sg===s) auto=byT[t].n; sellShares(t,sg.hold[t].sh,"close",sg); } }
+  for(const t in M.st){ const c=M.st[t].c; c[c.length-1].y=1; }
+  for(const m in games){ const g=games[m]; if(!g) continue; const w=worthOf(g); if(best[m]===null||w>best[m]) best[m]=w; }
   persist();
   sfx("bell"); if(worth()>s.dayStart+0.004) setTimeout(()=>confetti(110),300);
   fillClosedCard(isPro()
@@ -560,7 +600,7 @@ function fillClosedCard(note){
   $("closedRank").innerHTML=`<small>${isPro()?"Pro rank":"Your rank"}</small><b>${RANKS[i][1]}</b>&#11088; ${s.stars} star${s.stars===1?"":"s"}`+
     (nx?`<small>${nx[0]-s.stars} more to ${nx[1]}</small>`:`<small>Top rank. You're a legend!</small>`);
 }
-function nextDay(){ s.day++; startDay(); persist(); $("closed").hidden=true; render(); draw(true); paused=false; startLoop(); }
+function nextDay(){ openMarket(); for(const m in games){ const g=games[m]; if(g){ g.day++; startGameDay(g); } } persist(); $("closed").hidden=true; render(); draw(true); paused=false; startLoop(); }
 
 /* ---------- screen ---------- */
 function newsArrived(t,big){
@@ -581,32 +621,32 @@ function buildTabs(){
   document.body.classList.toggle("pro",isPro());
 }
 function render(){
-  const pro=isPro(), w=worth(), open=s.phase==="open";
-  if(!s.st[s.sel]) s.sel=Object.keys(s.st)[0];
+  const pro=isPro(), w=worth(), open=M.phase==="open";
+  if(!list().some(x=>x.t===s.sel)) s.sel=list()[0].t;
   $("proBadge").hidden=!pro;
   if(wShown===null){ wShown=w; $("worth").textContent=money(w); }
   if(wTarget!==null&&Math.abs(w-wTarget)>0.004){ const e=$("worth"); e.classList.remove("wu","wd"); void e.offsetWidth; e.classList.add(w>wTarget?"wu":"wd"); }
   wTarget=w;
   const td=w-(s.dayStart??w); $("today").hidden=!pro; $("today").textContent=signed(td)+" today"; $("today").className="today num "+cls(td);
-  $("clock").textContent=open?clockStr(s.min):"Closed";
-  $("clock").classList.toggle("urgent",open&&s.min>=MINS-15);
+  $("clock").textContent=open?clockStr(M.min):"Closed";
+  $("clock").classList.toggle("urgent",open&&M.min>=MINS-15);
   $("speed").textContent=opts.speed+"×"; $("speed").hidden=!open;
   $("pause").textContent=paused?"Play":"Pause"; $("pause").hidden=!open;
   for(const b of document.querySelectorAll(".tab")){
-    const t=b.dataset.t; if(!s.st[t]) continue;
-    const ch=price(t)/s.st[t].open-1, pc=b.querySelector(".pc");
+    const t=b.dataset.t; if(!M.st[t]) continue;
+    const ch=price(t)/M.st[t].open-1, pc=b.querySelector(".pc");
     pc.textContent=pct(ch); pc.className="num pc "+clsP(ch);
     const pp=b.querySelector(".pp"); if(pp) pp.textContent=money(price(t));
     b.classList.toggle("on",t===s.sel); b.classList.toggle("mine",!!s.hold[t]);
     b.setAttribute("aria-label",`${byT[t].n}, ${money(price(t))}, ${pct(ch)} today${s.hold[t]?", you own some":""}`);
   }
-  const x=byT[s.sel], p=price(s.sel), ch=p/s.st[s.sel].open-1;
+  const x=byT[s.sel], p=price(s.sel), ch=p/M.st[s.sel].open-1;
   if(lastSel===s.sel&&lastP!==null&&p!==lastP){ const e=$("cPrice"); e.classList.remove("tu","td"); void e.offsetWidth; e.classList.add(p>lastP?"tu":"td"); }
   lastSel=s.sel; lastP=p;
   renderGoal();
   $("cName").innerHTML=`${x.n}<small>${x.risk}</small>`;
   $("cPrice").innerHTML=pro?`${money(p)} <span class="${clsP(ch)}">${pct(ch)}</span>`:money(p);
-  $("newsTxt").textContent=s.news; $("newsTag").textContent=s.newsBig?"BREAKING":"NEWS"; $("newsTag").classList.toggle("hot",!!s.newsBig);
+  const nb=pro?M.newsBig:M.newsSBig; $("newsTxt").textContent=pro?M.news:M.newsS; $("newsTag").textContent=nb?"BREAKING":"NEWS"; $("newsTag").classList.toggle("hot",!!nb);
   $("act").hidden=pro; $("duo").hidden=!pro; $("qtyRow").hidden=!pro; $("stopRow").hidden=!pro||!s.hold[s.sel];
   if(pro) renderPro(p); else renderSimple(x);
 }
@@ -618,14 +658,14 @@ function renderSimple(x){
     a.className="act sell"+(pl>0.004?" glow":""); a.firstChild.nodeValue="SELL";
     $("actTxt").textContent=t===s.sel?`Cash out: ${money(worth())}`:`Sell your ${byT[t].n}`;
   }else{
-    $("status").textContent=s.phase==="open"?"Buy when you think it will go up":"";
+    $("status").textContent=M.phase==="open"?"Buy when you think it will go up":"";
     a.className="act buy"; a.firstChild.nodeValue="BUY";
     $("actTxt").textContent=`Put all ${money(s.cash)} into ${x.n}`;
   }
-  a.disabled=s.phase!=="open";
+  a.disabled=M.phase!=="open";
 }
 function renderPro(p){
-  const h=s.hold[s.sel], open=s.phase==="open";
+  const h=s.hold[s.sel], open=M.phase==="open";
   if(h){ const pl=h.sh*(p-h.cost);
     $("status").innerHTML=`You own <b>${h.sh}</b> · paid <b>${money(h.cost)}</b> · <b class="${cls(pl)}">${signed(pl)} (${pct(p/h.cost-1)})</b>`;
     for(const b of document.querySelectorAll("#stopRow button")) b.classList.toggle("on",+b.dataset.s===(h.stop||0));
@@ -648,8 +688,8 @@ function draw(snap){
   const r=cv.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,3), W=r.width||360, H=r.height||300;
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
-  const pro=isPro(), o=s.st[s.sel]; if(!o) return;
-  const p=o.p, live=s.phase==="open";
+  const pro=isPro(), o=M.st[s.sel]; if(!o) return;
+  const p=o.p, live=M.phase==="open";
   if(snap||disp===null) disp=p; else disp+=(p-disp)*(1-Math.pow(.93,opts.speed));   // glide gently across each 1-second tick
   const n=Math.max(24,Math.min(pro?60:50,Math.floor((W-80)/(pro?7:8)))), cs=o.c.slice(-n);
   const L=10,R=W-78,T=50,B=H-(pro?24:14), VB=pro?B-(B-T)*.16:B;
@@ -693,10 +733,10 @@ function draw(snap){
 
 /* ---------- "why you lost money" card and settings ---------- */
 let afterLesson=null, resumeAfter=false;
-function holdOn(){ if(s.phase==="open"&&!paused){ resumeAfter=true; setPaused(true); } }
+function holdOn(){ if(M.phase==="open"&&!paused){ resumeAfter=true; setPaused(true); } }
 function letGo(){ if(resumeAfter&&$("lesson").hidden&&$("settings").hidden&&$("proIntro").hidden){ resumeAfter=false; setPaused(false); } }
 function showLesson(h,sold,lost,auto){
-  const n=byT[h.t].n, held=s.min-(h.at??s.min), shares=isPro()?`${h.q} share${h.q>1?"s":""} of `:"";
+  const n=byT[h.t].n, held=M.min-(h.at??M.min), shares=isPro()?`${h.q} share${h.q>1?"s":""} of `:"";
   $("lessonLost").textContent="−"+money(lost);
   $("lessonWhat").innerHTML=`You bought ${shares}${n} at <b>${money(h.cost)}</b>. ${auto==="close"?"At 4:00 it was sold":auto==="stop"?"Your stop-loss sold it":"You sold it"} at <b>${money(sold)}</b>. `+
     `The price went <b class="down">down</b> after you bought, so your shares were worth less than you paid.`;
@@ -718,7 +758,7 @@ function closeLesson(turnOff){
 }
 function syncSettings(){
   for(const b of document.querySelectorAll("#modeSeg button")) b.classList.toggle("on",b.dataset.m===mode);
-  $("modeHelp").textContent=isPro()?"Six companies, share amounts, stop-loss, and overnight holding.":"Three companies and one big BUY / SELL button.";
+  $("modeHelp").textContent=(isPro()?"Six companies, share amounts, stop-loss, and overnight holding.":"Three companies and one big BUY / SELL button.")+" Both modes trade in the same market at the same prices.";
   $("optExplain").checked=opts.explain; $("optSound").checked=opts.sound;
   $("restart").textContent=`Start ${isPro()?"Pro":"Simple"} mode over with $10,000`; $("restart").dataset.arm="";
 }
@@ -731,10 +771,10 @@ function closeSettings(){
 function setMode(m){
   if(m===mode) return;
   persist(); stopLoop(); mode=m; if(!games[m]) newGame(m); s=games[m];
-  resumeAfter=s.phase==="open"; paused=true;   // resumes when Settings closes
+  resumeAfter=M.phase==="open"; paused=true;   // resumes when Settings closes
   $("closed").hidden=true;
   lastP=null; buildTabs(); render(); draw(true); syncSettings(); persist();
-  if(s.phase==="closed"){ fillClosedCard(""); afterLesson=()=>{$("closed").hidden=false;}; }
+  if(M.phase==="closed"){ fillClosedCard(""); afterLesson=()=>{$("closed").hidden=false;}; }
 }
 
 /* ---------- effects: money pop-ups, confetti, red flash, sounds ---------- */
@@ -795,7 +835,7 @@ function setSpeed(v){ opts.speed=v; persist(); if(timer){ stopLoop(); startLoop(
 
 /* ---------- loop ---------- */
 let paused=false, timer=null;
-function startLoop(){ if(timer||s.phase!=="open"||paused) return; timer=setInterval(()=>{tick(); render();},TICK_MS/(opts.speed||1)); }
+function startLoop(){ if(timer||M.phase!=="open"||paused) return; timer=setInterval(()=>{tick(); render();},TICK_MS/(opts.speed||1)); }
 function stopLoop(){ clearInterval(timer); timer=null; }
 function frame(){
   draw(false); drawFx();
@@ -824,6 +864,7 @@ $("nextDay").onclick=nextDay;
 $("restart").onclick=()=>{
   const b=$("restart");
   if(!b.dataset.arm){ b.dataset.arm="1"; b.textContent="Tap again to start over"; return; }
+  if(M.phase!=="open") nextDay();
   newGame(mode); persist(); for(const id of ["settings","closed","lesson"]) $(id).hidden=true; lastP=null; afterLesson=null; resumeAfter=false;
   render(); draw(true); paused=false; startLoop(); toast("Fresh start: $10,000");
 };
@@ -832,7 +873,7 @@ $("settingsDone").onclick=()=>{ closeSettings(); if($("proIntro").hidden&&afterL
 $("optExplain").onchange=e=>{ opts.explain=e.target.checked; persist(); toast(opts.explain?"Loss tips are on":"Loss tips are off"); };
 $("lessonDismiss").onclick=()=>closeLesson(true);
 $("lessonAgain").onclick=()=>closeLesson(false);
-document.addEventListener("visibilitychange",()=>{ if(document.hidden){ if(!paused&&s.phase==="open") setPaused(true); persist(); } });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden){ if(!paused&&M.phase==="open") setPaused(true); persist(); } });
 window.addEventListener("resize",()=>draw(true));
 
 // Android Back button: close whatever is open, or pause; returning false lets the app close.
@@ -841,18 +882,20 @@ window.appBack=()=>{
   if(!$("settings").hidden){$("settingsDone").click();return true;}
   if(!$("proIntro").hidden){$("proIntroGo").click();return true;}
   if(!$("intro").hidden){$("introGo").click();return true;}
-  if(s.phase==="open"&&!paused){setPaused(true);return true;}
+  if(M.phase==="open"&&!paused){setPaused(true);return true;}
   return false;
 };
-window.__tt={get s(){return s},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
+const MK=new Set(["st","min","phase","news","newsBig","used","gapNext"]);
+window.__tt={get s(){return new Proxy(s,{get:(g,k)=>MK.has(k)?M[k]:g[k],set:(g,k,v)=>{(MK.has(k)?M:g)[k]=v;return true;}});},get m(){return M},
+  fresh:()=>{newMarket(); games={simple:null,pro:null}; newGame(mode); lastP=null; buildTabs(); render(); draw(true);},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
   act,buyShares,sellShares,setQty:q=>{qtyMode=String(q);},nextDay,closeMarket,select:t=>{s.sel=t;},setMode,setPaused,stopLoop,draw,render,
   closeLesson,openSettings,closeSettings,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,
   get own(){const t=Object.keys(s.hold)[0];return t?Object.assign({t},s.hold[t]):null;}};
 
 load(); buildTabs(); render(); draw(true); requestAnimationFrame(frame);
-if(s.phase==="closed") closeMarket();
+if(M.phase==="closed") closeMarket();
 else if(!seenIntro){ paused=true; render(); $("intro").hidden=false; }
-else setPaused(s.min>0);   // a day already in progress starts paused, so nothing moves before you look
+else setPaused(M.min>0);   // a day already in progress starts paused, so nothing moves before you look
 })();
 </script>
 

@@ -74,7 +74,7 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   await p.click("#openSettings"); await p.click('#modeSeg button[data-m="simple"]'); await p.click("#settingsDone"); await wait(150);
   check("back in Simple mode with its own money and 3 tabs",await p.evaluate(()=>window.__tt.mode==="simple"&&document.querySelectorAll(".tab").length===3));
   await p.reload(); await wait(400);
-  check("mode and both games survive a reload",await p.evaluate(()=>{const d=JSON.parse(localStorage.getItem("tinytrader.v4"));return d.mode==="simple"&&d.games.pro&&Object.keys(d.games.pro.hold).length===1;}));
+  check("mode and both games survive a reload",await p.evaluate(()=>{const d=JSON.parse(localStorage.getItem("tinytrader.v5"));return d.mode==="simple"&&d.games.pro&&Object.keys(d.games.pro.hold).length===1;}));
   // ---- stimulation: goal strip, speed, sounds, pop-ups, rank on the day card
   check("goal strip shows a goal and stars",await p.evaluate(()=>document.getElementById("goalTxt").textContent.length>5&&document.getElementById("stars").textContent.startsWith("⭐")));
   await p.evaluate(()=>window.__tt.setPaused(false));
