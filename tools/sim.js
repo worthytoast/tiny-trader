@@ -38,7 +38,7 @@ T.newGame(); while(T.s.phase==="open") T.tick(); console.log("day-end card shown
 stats("cash only",none,20); stats("hold Pizza",holdAll,300); stats("random taps",random,300); stats("news chaser",chaserWrap,300);
 // rule checks
 T.newGame(); T.select("PZZA"); T.act(); const o=T.own;
-console.log("BUY uses (almost) all cash:",o&&T.s.cash<T.price("PZZA"));
+console.log("BUY gets exactly 10 shares:",o&&o.sh===10&&Math.abs(T.s.cash-(10000-10*o.cost))<0.01);
 T.select("MOON"); console.log("button says SELL while holding:",document.getElementById("act").className.includes("sell"));
 T.act(); console.log("SELL cashes out everything (even when looking at another company):",!T.own&&Math.abs(T.s.cash-10000)<0.01);
 T.act(); for(let i=0;i<400;i++) T.tick(); console.log("auto-sold at 4:00:",!T.own,"note:",$("closedNote").textContent);
@@ -67,7 +67,8 @@ console.log("two winning trades finish the goal and earn a star:",T.s.goal.done&
 console.log("streak counts wins in a row:",T.s.streak===2);
 T.select("PZZA"); T.act(); T.s.st.PZZA.p=Math.round(T.own.cost*97)/100; T.act();
 console.log("a losing trade resets the streak:",T.s.streak===0);
-T.s.goal={k:"profit",n:100,prog:0,done:false}; T.select("SLTH"); T.act(); T.s.st.SLTH.p=Math.round(T.own.cost*105)/100; T.tick();
+{const g={mode:"simple",dayStart:10000,goal:null}; let ok=true; for(let i=0;i<60;i++){T.makeGoal(g); if(g.goal.k==="profit"&&g.goal.n!==10) ok=false;} console.log("Simple profit goal is $10:",ok);}
+T.s.goal={k:"profit",n:10,prog:0,done:false}; T.select("SLTH"); T.act(); T.s.st.SLTH.p=Math.round(T.own.cost*105)/100; T.tick();
 console.log("profit goal fills while you hold a winner:",T.s.goal.done);
 console.log("ranks: 0 stars Rookie, 3 Trader, 40 Legend:",T.rankOf(0)===0&&T.rankOf(3)===1&&T.rankOf(40)===5);
 while(T.s.phase==="open") T.tick(); T.nextDay();

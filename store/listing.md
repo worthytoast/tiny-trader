@@ -13,7 +13,7 @@ Tiny Trader is the simplest day-trading game there is, played with pretend money
 
 Watch the live price bars move. Tap BUY when you think the price will go up. Tap SELL to cash out. Sell higher than you bought and you make money!
 
-• One big button: BUY puts all your money in, SELL cashes it all out
+• One big button: BUY gets 10 shares, SELL sells them
 • Live candlestick chart that moves while you watch
 • Three made-up companies: calm Sloth Mattress, Pizza Rocket, and wild Moon Mining
 • Funny news headlines that make prices jump or crash

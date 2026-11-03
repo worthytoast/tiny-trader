@@ -99,6 +99,15 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 .lesson .lw{font-size:19px;line-height:1.4;margin:0 0 12px;color:var(--hi)}
 .lesson .tip{background:var(--panel2);border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:17px;line-height:1.4}
 .lesson .tip b.h{color:var(--up)}
+.lesson .more{display:block;margin:0 auto 12px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:999px;padding:8px 16px;font-family:var(--display);font-size:17px}
+.lesson .more .pl{display:inline-block;width:24px;height:24px;line-height:24px;border-radius:50%;background:var(--blue);color:#fff;margin-right:6px}
+.lesson .detail{text-align:left;background:var(--panel2);border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:16px;line-height:1.45}
+.lesson .detail p{margin:0 0 8px}
+.lesson .detail .math{font-family:var(--display);font-size:20px;text-align:center;color:var(--hi);margin:2px 0 10px}
+.lesson .detail table{width:100%;border-collapse:collapse;margin:2px 0 8px}
+.lesson .detail td{padding:4px 6px;border-top:1px solid var(--line)}
+.lesson .detail td:last-child{text-align:right}
+.lesson .detail tr.you td{color:var(--hi);font-weight:800}
 .why{color:var(--hi)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .btn2{border:0;border-radius:14px;padding:13px 8px;font-family:var(--display);font-size:19px}
@@ -207,8 +216,8 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <p>You have <b>$10,000 of pretend money</b>. Each trading day lasts about 6 minutes.</p>
     <ol class="steps">
       <li>Watch the price bars move.</li>
-      <li>Tap <b class="up">BUY</b> when you think it will go up.</li>
-      <li>Tap <b class="down">SELL</b> to cash out. Sell higher than you bought to make money!</li>
+      <li>Tap <b class="up">BUY</b> to get 10 shares when you think the price will go up.</li>
+      <li>Tap <b class="down">SELL</b> to sell them. Sell higher than you bought to make money!</li>
       <li>Finish the daily &#127919; goal to earn &#11088; stars and rank up.</li>
     </ol>
     <button class="go" id="introGo">Start trading</button>
@@ -252,6 +261,8 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
     <div class="bs" id="lessonWhat"></div>
     <p class="lw" id="lessonWhy"></p>
     <p class="tip" id="lessonTip"></p>
+    <button class="more" id="lessonMore" aria-expanded="false" aria-controls="lessonDetail"><span class="pl" id="lessonMoreIcon">+</span><span id="lessonMoreTxt">Why so much?</span></button>
+    <div class="detail" id="lessonDetail" hidden></div>
     <div class="pair">
       <button class="btn2 dim" id="lessonDismiss">Dismiss</button>
       <button class="btn2 main" id="lessonAgain">Remind me again</button>
@@ -329,7 +340,7 @@ const clockStr=m=>{const t=570+m,h=Math.floor(t/60),mm=t%60,h12=((h+11)%12)+1;re
 
 /* ---------- state ----------
    games.simple / games.pro: each mode has its own money.
-   s.hold: {TICKER: {sh, cost, at, bad, good, stop}}. Simple mode holds at most one company, all-in. */
+   s.hold: {TICKER: {sh, cost, at, bad, good, stop}}. Simple mode holds at most one company, 10 shares at a time. */
 let games={simple:null,pro:null}, mode="simple", s=null, best={simple:null,pro:null}, seenIntro=false, seenPro=false, opts={explain:true,sound:true,speed:1};
 const isPro=()=>mode==="pro";
 const list=()=>isPro()?ALL:ALL.filter(x=>x.simple);
@@ -391,7 +402,8 @@ function load(){
   if(!M) newMarket();
   if(!games[mode]) newGame(mode);
   s=games[mode];
-  for(const m in games){ const g=games[m]; if(!g) continue; g.mode=m; if(!g.goal){ g.wins=g.wins||0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); } }
+  for(const m in games){ const g=games[m]; if(!g) continue; g.mode=m; if(!g.goal){ g.wins=g.wins||0; g.stars=g.stars||0; g.streak=g.streak||0; makeGoal(g); }
+    if(m==="simple"&&g.goal.k==="profit"&&g.goal.n>10&&!g.goal.done) g.goal.n=10; }   // Simple went from all-in to 10 shares
 }
 // Older versions gave each mode its own prices. Merge them into one market (the mode you were playing wins),
 // and cash out the other mode's shares at its old price so nobody gains or loses from the change.
@@ -417,7 +429,7 @@ function makeGoal(g){
   if(pro) kinds.push("spread");
   const k=pick(kinds.filter(x=>x!==(g.goal&&g.goal.k)));
   const goal={k,prog:0,done:false};
-  if(k==="profit") goal.n=Math.max(50,Math.round(g.dayStart*.01/50)*50);
+  if(k==="profit") goal.n=pro?Math.max(50,Math.round(g.dayStart*.01/50)*50):10;   // Simple trades 10 shares, so $10 is a good day
   else if(k==="wins") goal.n=pro?3:2;
   else if(k==="spread") goal.n=3;
   else goal.n=1;
@@ -555,11 +567,12 @@ function sellShares(t,q,auto,g){
   if(me){ render(); if(pl<-0.004&&opts.explain) showLesson(snap,p,-pl,auto); }
   return pl;
 }
-// Simple mode: one button that puts everything in, or takes everything out
+// Simple mode: one button that buys 10 shares, or sells them all
+const SIMPLE_QTY=10;
 function act(){
   const t=owned()[0];
   if(t) sellShares(t,s.hold[t].sh,null);
-  else buyShares(s.sel,Infinity);
+  else buyShares(s.sel,SIMPLE_QTY);
 }
 const proBuyQty=()=>{const can=Math.floor(s.cash/price(s.sel));return qtyMode==="max"?can:Math.min(+qtyMode,can);};
 const proSellQty=()=>{const own=s.hold[s.sel]?.sh||0;return qtyMode==="max"?own:Math.min(+qtyMode,own);};
@@ -649,11 +662,11 @@ function renderSimple(x){
     const h=s.hold[t], pl=h.sh*(price(t)-h.cost);
     $("status").innerHTML=`${pl>=0?"You're up":"You're down"} <b class="${cls(pl)}">${signed(pl)}</b>`;
     a.className="act sell"+(pl>0.004?" glow":""); a.firstChild.nodeValue="SELL";
-    $("actTxt").textContent=t===s.sel?`Cash out: ${money(worth())}`:`Sell your ${byT[t].n}`;
+    $("actTxt").textContent=`Sell ${h.sh} ${byT[t].n} for ${money(h.sh*price(t))}`;
   }else{
     $("status").textContent=M.phase==="open"?"Buy when you think it will go up":"";
     a.className="act buy"; a.firstChild.nodeValue="BUY";
-    $("actTxt").textContent=`Put all ${money(s.cash)} into ${x.n}`;
+    $("actTxt").textContent=`Buy 10 ${x.n} for ${money(SIMPLE_QTY*price(x.t))}`;
   }
   a.disabled=M.phase!=="open";
 }
@@ -740,9 +753,25 @@ function showLesson(h,sold,lost,auto){
   else if(byT[h.t].risk==="wild"){ why=`${n} jumps a lot, up and down.`; tip="Wild stocks win big or lose big. Try a calm one."; }
   else { why="The price went down. That happens!"; tip="Try to sell above the yellow line (what you paid)."; }
   $("lessonTip").innerHTML=`<b class="h">Tip:</b> ${tip}`;
+  // the "+" details: how the number of shares turns a small price drop into the loss
+  const q=h.q||1, per=lost/q, drop=1-sold/h.cost, sh=k=>`${k} share${k>1?"s":""}`;
+  const rows=[1,10,100].map(k=>`<tr${k===q?' class="you"':""}><td>${sh(k)}${k===q?" (you)":""}</td><td class="down">−${money(per*k)}</td></tr>`).join("")+
+    ([1,10,100].includes(q)?"":`<tr class="you"><td>${sh(q)} (you)</td><td class="down">−${money(lost)}</td></tr>`);
+  $("lessonDetail").innerHTML=
+    `<p>Each share lost <b class="down">${money(per)}</b>. You paid ${money(h.cost)} and sold for ${money(sold)}. That's a drop of ${pct(drop).replace(/^[-+−]/,"")}.</p>`+
+    `<p>You had <b>${sh(q)}</b>, so every share lost that much:</p>`+
+    `<div class="math">${q} × ${money(per)} = <span class="down">${money(lost)}</span></div>`+
+    `<p>The more shares you own, the bigger your wins <b>and</b> your losses:</p><table>${rows}</table>`+
+    (isPro()?`<p>You picked ${sh(q)}. Fewer shares means less risk. More shares means more risk.</p>`
+            :`<p>Simple mode always buys <b>10 shares</b>. So when the price moves $1, your money moves <b>$10</b>. Up or down!</p>`);
+  setMore(false);
   $("lessonWhy").textContent=why;
   clearTimeout(tt); $("toast").style.opacity=0; document.querySelectorAll(".pop").forEach(e=>e.remove()); holdOn(); $("lesson").hidden=false;
   try{$("lessonAgain").focus({preventScroll:true});}catch(e){}
+}
+function setMore(open){
+  $("lessonDetail").hidden=!open; $("lessonMore").setAttribute("aria-expanded",open);
+  $("lessonMoreIcon").textContent=open?"−":"+"; $("lessonMoreTxt").textContent=open?"Hide":"Why so much?";
 }
 function closeLesson(turnOff){
   $("lesson").hidden=true;
@@ -865,6 +894,7 @@ $("openSettings").onclick=openSettings;
 $("settingsDone").onclick=()=>{ closeSettings(); if($("proIntro").hidden&&afterLesson){const f=afterLesson; afterLesson=null; f();} };
 $("optExplain").onchange=e=>{ opts.explain=e.target.checked; persist(); toast(opts.explain?"Loss tips are on":"Loss tips are off"); };
 $("lessonDismiss").onclick=()=>closeLesson(true);
+$("lessonMore").onclick=()=>{ const o=$("lessonDetail").hidden; setMore(o); if(o) try{$("lessonDetail").scrollIntoView({behavior:"smooth",block:"nearest"});}catch(e){} };
 $("lessonAgain").onclick=()=>closeLesson(false);
 document.addEventListener("visibilitychange",()=>{ if(document.hidden){ if(!paused&&M.phase==="open") setPaused(true); persist(); } });
 window.addEventListener("resize",()=>draw(true));
@@ -879,7 +909,7 @@ window.appBack=()=>{
   return false;
 };
 const MK=new Set(["st","min","phase","news","newsBig","used","gapNext"]);
-window.__tt={get s(){return new Proxy(s,{get:(g,k)=>MK.has(k)?M[k]:g[k],set:(g,k,v)=>{(MK.has(k)?M:g)[k]=v;return true;}});},get m(){return M},
+window.__tt={makeGoal,get s(){return new Proxy(s,{get:(g,k)=>MK.has(k)?M[k]:g[k],set:(g,k,v)=>{(MK.has(k)?M:g)[k]=v;return true;}});},get m(){return M},
   fresh:()=>{newMarket(); games={simple:null,pro:null}; newGame(mode); lastP=null; buildTabs(); render(); draw(true);},get mode(){return mode},get opts(){return opts},ALL,list,tick,worth,price,newGame:()=>newGame(mode),
   act,buyShares,sellShares,setQty:q=>{qtyMode=String(q);},nextDay,closeMarket,select:t=>{s.sel=t;},setMode,setPaused,stopLoop,draw,render,
   closeLesson,openSettings,closeSettings,isPaused:()=>paused,setSpeed,goalUpdate,rankOf,

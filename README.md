@@ -1,6 +1,6 @@
 # Tiny Trader
 
-A day-trading game played with pretend money, with two modes. Simple mode has a live candlestick chart, three made-up companies, and one big all-in BUY / SELL button. Pro mode (in Settings) adds six companies, share amounts, owning several at once, stop-loss, overnight holding, and a fuller chart. Both modes trade in one shared market (same companies, same prices, same clock), and each mode keeps its own $10,000 and its own shares. Both modes have a daily goal that earns stars and ranks, win streaks, sound effects, and a 1x/2x/3x speed button.
+A day-trading game played with pretend money, with two modes. Simple mode has a live candlestick chart, three made-up companies, and one big BUY / SELL button that trades 10 shares at a time. Pro mode (in Settings) adds six companies, share amounts, owning several at once, stop-loss, overnight holding, and a fuller chart. Both modes trade in one shared market (same companies, same prices, same clock), and each mode keeps its own $10,000 and its own shares. Both modes have a daily goal that earns stars and ranks, win streaks, sound effects, and a 1x/2x/3x speed button.
 
 - **Play in a browser:** https://worthytoast.github.io/tiny-trader/
 - **Android app:** `android/` builds a signed Play Store bundle (`.aab`) that runs the same game offline.

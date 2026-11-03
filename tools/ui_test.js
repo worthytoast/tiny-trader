@@ -18,6 +18,12 @@ let fails=0; const check=(name,ok)=>{console.log((ok?"PASS ":"FAIL ")+name); if(
   check("game pauses while the card is open",await p.evaluate(()=>window.__tt.isPaused()));
   const txt=await p.evaluate(()=>document.getElementById("lessonWhat").textContent+" | "+document.getElementById("lessonWhy").textContent);
   console.log("   card says:",txt);
+  check("details start hidden",!(await vis("lessonDetail")));
+  await p.click("#lessonMore"); await wait(100);
+  const det=await p.evaluate(()=>document.getElementById("lessonDetail").textContent);
+  check("plus button shows the share math (10 shares)",(await vis("lessonDetail"))&&det.includes("10 ×")&&det.includes("10 shares"));
+  await p.click("#lessonMore"); await wait(100);
+  check("tapping again hides the details",!(await vis("lessonDetail")));
   await p.click("#lessonAgain"); await wait(150);
   check("Remind me again closes the card",!(await vis("lesson")));
   check("Remind me again keeps tips on",await p.evaluate(()=>window.__tt.opts.explain===true));
