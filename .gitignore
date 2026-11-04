@@ -10,3 +10,4 @@ android/app/build/
 release/
 dist/
 node_modules/
+*_test.png
