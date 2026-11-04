@@ -13,10 +13,11 @@ Tiny Trader is a simple day-trading game that teaches you how the stock market w
 
 Watch the live price line go up and down. Tap BUY when you think the price will go up. Tap SELL to cash out. Sell higher than you bought and you make money!
 
-• One big button: BUY gets 10 shares, SELL sells them
+• One big button: BUY gets 50 shares, SELL sells them
 • Trade the Tiny Market: six made-up companies rolled into one price, like a real index fund
 • Trading School: 7 short lessons on real techniques (moving averages, support and resistance, take-profit and stop-loss, trading the news, candlesticks, and not betting it all). Each one adds its tool to your chart and gives you a task to practice it
-• A coach walks you through each lesson step by step, then a quick quiz checks what you learned
+• A coach walks you through each lesson step by step, then a card shows how that tool is used in real markets
+• Realistic prices: the market moves about as much as a real index, busiest at the open and close, and every trade pays a small spread like a real broker
 • A report card after every day: your trades, win rate, a tip based on how you played, and a true fact about real stock markets
 • A How it works guide with a Words to know glossary (stock, share, index fund, bull and bear markets, and more)
 • Funny news headlines that make prices jump or crash
